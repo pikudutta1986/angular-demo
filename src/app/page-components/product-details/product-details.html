@@ -1,0 +1,339 @@
+<div class="product-details-page" *ngIf="product">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a routerLink="/home">Home</a>
+    <span class="separator">></span>
+    <a routerLink="/products">Products</a>
+    <span class="separator">></span>
+    <a [routerLink]="['/products']" [queryParams]="{category: product.category}">{{ product.category }}</a>
+    <span class="separator">></span>
+    <span class="current">{{ product.name }}</span>
+  </nav>
+
+  <!-- Main Product Section -->
+  <div class="product-main">
+    <div class="product-container">
+      <!-- Image Gallery -->
+      <div class="image-gallery">
+        <div class="main-image">
+          <img 
+            [src]="product.images[selectedImageIndex].url" 
+            [alt]="product.images[selectedImageIndex].alt"
+            (click)="onImageClick(product.images[selectedImageIndex].url)"
+            class="product-image"
+          />
+          
+          <!-- Badges -->
+          <div class="product-badges">
+            <span *ngIf="product.isNew" class="badge new">New</span>
+            <span *ngIf="product.isSale" class="badge sale">Sale</span>
+            <span *ngIf="!product.inStock" class="badge out-of-stock">Out of Stock</span>
+          </div>
+
+          <!-- Discount Badge -->
+          <div *ngIf="product.originalPrice" class="discount-badge">
+            -{{ getDiscountPercentage(product.originalPrice, product.price) }}%
+          </div>
+
+          <!-- Zoom Icon -->
+          <button class="zoom-btn" (click)="onImageClick(product.images[selectedImageIndex].url)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Thumbnail Images -->
+        <div class="thumbnail-images">
+          <button 
+            *ngFor="let image of product.images; let i = index"
+            class="thumbnail-btn"
+            [class.active]="i === selectedImageIndex"
+            (click)="onImageSelect(i)"
+          >
+            <img [src]="image.url" [alt]="image.alt" class="thumbnail">
+          </button>
+        </div>
+      </div>
+
+      <!-- Product Information -->
+      <div class="product-info">
+        <!-- Product Header -->
+        <div class="product-header">
+          <div class="product-category">{{ product.category }}</div>
+          <h1 class="product-name">{{ product.name }}</h1>
+          <div class="product-brand">by {{ product.brand }}</div>
+        </div>
+
+        <!-- Rating and Reviews -->
+        <div class="product-rating">
+          <div class="rating-stars">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  class="star" 
+                  [class.filled]="star <= getFloorRating(product.rating)">★</span>
+          </div>
+          <span class="rating-value">{{ product.rating }}</span>
+          <span class="rating-count">({{ product.reviewCount }} reviews)</span>
+          <a href="#reviews" class="reviews-link">Read reviews</a>
+        </div>
+
+        <!-- Price -->
+        <div class="product-price">
+          <span class="current-price">${{ product.price }}</span>
+          <span *ngIf="product.originalPrice" class="original-price">${{ product.originalPrice }}</span>
+          <span *ngIf="product.originalPrice" class="savings">You save ${{ (product.originalPrice - product.price).toFixed(2) }}</span>
+        </div>
+
+        <!-- Description -->
+        <div class="product-description">
+          <p>{{ product.description }}</p>
+        </div>
+
+        <!-- Variants -->
+        <div class="product-variants" *ngIf="getVariantGroups() | keyvalue">
+          <div *ngFor="let group of getVariantGroups() | keyvalue" class="variant-group">
+            <label class="variant-label">{{ group.key }}:</label>
+            <div class="variant-options">
+              <button 
+                *ngFor="let variant of group.value"
+                class="variant-option"
+                [class.selected]="selectedVariants[group.key] === variant.value"
+                [class.out-of-stock]="!variant.inStock"
+                [disabled]="!variant.inStock"
+                (click)="onVariantChange(group.key, variant.value)"
+              >
+                {{ variant.value }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantity and Actions -->
+        <div class="product-actions">
+          <div class="quantity-selector">
+            <label class="quantity-label">Quantity:</label>
+            <div class="quantity-controls">
+              <button class="quantity-btn" (click)="onQuantityChange(-1)" [disabled]="quantity <= 1">-</button>
+              <input 
+                type="number" 
+                [(ngModel)]="quantity" 
+                min="1" 
+                max="10" 
+                class="quantity-input"
+                readonly
+              />
+              <button class="quantity-btn" (click)="onQuantityChange(1)" [disabled]="quantity >= 10">+</button>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button 
+              class="add-to-cart-btn"
+              [disabled]="!product.inStock"
+              (click)="onAddToCart()"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              {{ product.inStock ? 'Add to Cart' : 'Out of Stock' }}
+            </button>
+
+            <button class="wishlist-btn" (click)="onAddToWishlist()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+
+            <button class="share-btn" (click)="onShare()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="product-tags">
+          <span *ngFor="let tag of product.tags" class="tag">{{ tag }}</span>
+        </div>
+
+        <!-- Features -->
+        <div class="product-features">
+          <h3>Key Features</h3>
+          <ul>
+            <li>Premium sound quality with active noise cancellation</li>
+            <li>30-hour battery life with quick charge capability</li>
+            <li>Comfortable over-ear design for extended listening</li>
+            <li>Bluetooth 5.0 connectivity with stable connection</li>
+            <li>Water-resistant design (IPX4 rating)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details Tabs -->
+  <div class="product-tabs">
+    <div class="tabs-container">
+      <div class="tab-navigation">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'description'"
+          (click)="onTabChange('description')"
+        >
+          Description
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'specifications'"
+          (click)="onTabChange('specifications')"
+        >
+          Specifications
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'reviews'"
+          (click)="onTabChange('reviews')"
+        >
+          Reviews ({{ product.reviewCount }})
+        </button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Description Tab -->
+        <div *ngIf="activeTab === 'description'" class="tab-panel">
+          <h3>Product Description</h3>
+          <p>{{ product.longDescription }}</p>
+          
+          <h4>What's Included</h4>
+          <ul>
+            <li>Wireless Bluetooth Headphones</li>
+            <li>USB-C Charging Cable</li>
+            <li>3.5mm Audio Cable</li>
+            <li>Carrying Case</li>
+            <li>User Manual</li>
+            <li>2-Year Warranty Card</li>
+          </ul>
+        </div>
+
+        <!-- Specifications Tab -->
+        <div *ngIf="activeTab === 'specifications'" class="tab-panel">
+          <h3>Technical Specifications</h3>
+          <div class="specifications-table">
+            <div *ngFor="let spec of product.specifications | keyvalue" class="spec-row">
+              <span class="spec-name">{{ spec.key }}</span>
+              <span class="spec-value">{{ spec.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div *ngIf="activeTab === 'reviews'" class="tab-panel" id="reviews">
+          <div class="reviews-header">
+            <h3>Customer Reviews</h3>
+            <div class="reviews-summary">
+              <div class="average-rating">
+                <span class="rating-number">{{ product.rating }}</span>
+                <div class="rating-stars">
+                  <span *ngFor="let star of [1,2,3,4,5]" 
+                        class="star" 
+                        [class.filled]="star <= getFloorRating(product.rating)">★</span>
+                </div>
+                <span class="rating-text">Based on {{ product.reviewCount }} reviews</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reviews-list">
+            <div *ngFor="let review of product.reviews" class="review-item">
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <span class="reviewer-name">{{ review.userName }}</span>
+                  <span *ngIf="review.verified" class="verified-badge">Verified Purchase</span>
+                </div>
+                <div class="review-rating">
+                  <div class="stars">
+                    <span *ngFor="let star of [1,2,3,4,5]" 
+                          class="star" 
+                          [class.filled]="star <= review.rating">★</span>
+                  </div>
+                  <span class="review-date">{{ review.date }}</span>
+                </div>
+              </div>
+              
+              <h4 class="review-title">{{ review.title }}</h4>
+              <p class="review-comment">{{ review.comment }}</p>
+              
+              <div class="review-actions">
+                <button class="helpful-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                  </svg>
+                  Helpful ({{ review.helpful }})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  <div class="related-products">
+    <div class="related-container">
+      <h2>You Might Also Like</h2>
+      <div class="related-grid">
+        <div *ngFor="let relatedProduct of product.relatedProducts" 
+             class="related-item"
+             (click)="onRelatedProductClick(relatedProduct.id)">
+          <div class="related-image">
+            <img [src]="relatedProduct.image" [alt]="relatedProduct.name">
+          </div>
+          <div class="related-info">
+            <h4 class="related-name">{{ relatedProduct.name }}</h4>
+            <div class="related-rating">
+              <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" 
+                      class="star" 
+                      [class.filled]="star <= getFloorRating(relatedProduct.rating)">★</span>
+              </div>
+              <span class="rating-value">{{ relatedProduct.rating }}</span>
+            </div>
+            <div class="related-price">${{ relatedProduct.price }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div *ngIf="showImageModal" class="image-modal" (click)="closeImageModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeImageModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <img [src]="selectedImageForModal" [alt]="product.name" class="modal-image">
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!product" class="loading-state">
+  <div class="loading-spinner">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+    </svg>
+  </div>
+  <p>Loading product details...</p>
+</div>

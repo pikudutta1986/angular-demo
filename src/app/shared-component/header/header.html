@@ -1,0 +1,20 @@
+<header class="header">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a routerLink="/home" class="brand-link">{{ title }}</a>
+    </div>
+    
+    <div class="nav-menu">
+      <ul class="nav-list">
+        <li class="nav-item" *ngFor="let item of navItems">
+          <a [routerLink]="item.path" class="nav-link">{{ item.label }}</a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="nav-actions">
+      <a routerLink="/cart" class="nav-link cart-link">Cart</a>
+      <a routerLink="/login" class="nav-link login-link">Login</a>
+    </div>
+  </nav>
+</header>

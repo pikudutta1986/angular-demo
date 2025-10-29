@@ -1,0 +1,150 @@
+<div class="blog-details-page" *ngIf="blogPost">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a routerLink="/home">Home</a>
+    <span class="separator">></span>
+    <a routerLink="/blog">Blog</a>
+    <span class="separator">></span>
+    <span class="current">{{ blogPost.title }}</span>
+  </nav>
+
+  <!-- Article Header -->
+  <article class="article-container">
+    <header class="article-header">
+      <div class="article-meta">
+        <span class="category">{{ blogPost.category }}</span>
+        <span class="date">{{ formatDate(blogPost.publishDate) }}</span>
+        <span class="read-time">{{ getReadingTimeText(blogPost.readTime) }}</span>
+      </div>
+      
+      <h1 class="article-title">{{ blogPost.title }}</h1>
+      
+      <p class="article-excerpt">{{ blogPost.excerpt }}</p>
+      
+      <div class="article-tags">
+        <span *ngFor="let tag of blogPost.tags" class="tag">{{ tag }}</span>
+      </div>
+    </header>
+
+    <!-- Featured Image -->
+    <div class="featured-image">
+      <img [src]="blogPost.featuredImage" [alt]="blogPost.title">
+    </div>
+
+    <!-- Article Content -->
+    <div class="article-content">
+      <div class="content-wrapper">
+        <div class="main-content">
+          <div class="article-body" [innerHTML]="blogPost.content"></div>
+          
+          <!-- Article Footer -->
+          <div class="article-footer">
+            <div class="article-actions">
+              <button class="action-btn like-btn" (click)="onLike()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                {{ formatNumber(blogPost.likes) }} likes
+              </button>
+              
+              <button class="action-btn share-btn" (click)="onShare()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share
+              </button>
+            </div>
+            
+            <div class="article-stats">
+              <span class="views">{{ formatNumber(blogPost.views) }} views</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="article-sidebar">
+          <!-- Author Info -->
+          <div class="author-card">
+            <div class="author-header">
+              <img [src]="blogPost.author.avatar" [alt]="blogPost.author.name" class="author-avatar">
+              <div class="author-info">
+                <h3 class="author-name">{{ blogPost.author.name }}</h3>
+                <p class="author-bio">{{ blogPost.author.bio }}</p>
+              </div>
+            </div>
+            
+            <div class="author-social">
+              <a *ngIf="blogPost.author.social.twitter" [href]="blogPost.author.social.twitter" target="_blank" class="social-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+                </svg>
+              </a>
+              <a *ngIf="blogPost.author.social.linkedin" [href]="blogPost.author.social.linkedin" target="_blank" class="social-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
+                  <circle cx="4" cy="4" r="2"/>
+                </svg>
+              </a>
+              <a *ngIf="blogPost.author.social.github" [href]="blogPost.author.social.github" target="_blank" class="social-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Table of Contents -->
+          <div class="toc-card">
+            <h3 class="toc-title">Table of Contents</h3>
+            <div class="toc-content">
+              <ul class="toc-list">
+                <li><a href="#ai-integration">1. Artificial Intelligence Integration</a></li>
+                <li><a href="#webassembly">2. WebAssembly (WASM) Adoption</a></li>
+                <li><a href="#frameworks">3. Modern JavaScript Frameworks</a></li>
+                <li><a href="#serverless">4. Serverless and Edge Computing</a></li>
+                <li><a href="#web3">5. Web3 and Blockchain Integration</a></li>
+                <li><a href="#conclusion">Conclusion</a></li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  <!-- Related Posts -->
+  <section class="related-posts">
+    <div class="related-container">
+      <h2 class="related-title">Related Articles</h2>
+      <div class="related-grid">
+        <article *ngFor="let post of relatedPosts" class="related-card" (click)="onRelatedPostClick(post.slug)">
+          <div class="related-image">
+            <img [src]="post.featuredImage" [alt]="post.title">
+          </div>
+          <div class="related-content">
+            <div class="related-meta">
+              <span class="related-date">{{ formatDate(post.publishDate) }}</span>
+              <span class="related-read-time">{{ getReadingTimeText(post.readTime) }}</span>
+            </div>
+            <h3 class="related-post-title">{{ post.title }}</h3>
+            <p class="related-excerpt">{{ post.excerpt }}</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!blogPost" class="loading-state">
+  <div class="loading-spinner">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+    </svg>
+  </div>
+  <p>Loading article...</p>
+</div>

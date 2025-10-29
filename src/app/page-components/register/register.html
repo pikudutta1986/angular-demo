@@ -1,0 +1,311 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1 class="register-title">Create Account</h1>
+      <p class="register-subtitle">Join us today and get started</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Personal Information Section -->
+      <div class="form-section">
+        <h3 class="section-title">Personal Information</h3>
+        
+        <div class="form-row">
+          <!-- First Name -->
+          <div class="form-group">
+            <label for="firstName" class="form-label">First Name</label>
+            <div class="input-container">
+              <input
+                type="text"
+                id="firstName"
+                formControlName="firstName"
+                class="form-input"
+                [class.error]="formControls['firstName'].invalid && formControls['firstName'].touched"
+                placeholder="Enter your first name"
+              />
+              <div class="input-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="getErrorMessage('firstName')">
+              {{ getErrorMessage('firstName') }}
+            </div>
+          </div>
+
+          <!-- Last Name -->
+          <div class="form-group">
+            <label for="lastName" class="form-label">Last Name</label>
+            <div class="input-container">
+              <input
+                type="text"
+                id="lastName"
+                formControlName="lastName"
+                class="form-input"
+                [class.error]="formControls['lastName'].invalid && formControls['lastName'].touched"
+                placeholder="Enter your last name"
+              />
+              <div class="input-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="getErrorMessage('lastName')">
+              {{ getErrorMessage('lastName') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <div class="input-container">
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-input"
+              [class.error]="formControls['email'].invalid && formControls['email'].touched"
+              placeholder="Enter your email"
+            />
+            <div class="input-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="error-message" *ngIf="getErrorMessage('email')">
+            {{ getErrorMessage('email') }}
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone Number (Optional)</label>
+          <div class="input-container">
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-input"
+              [class.error]="formControls['phone'].invalid && formControls['phone'].touched"
+              placeholder="Enter your phone number"
+            />
+            <div class="input-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="error-message" *ngIf="getErrorMessage('phone')">
+            {{ getErrorMessage('phone') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Security Section -->
+      <div class="form-section">
+        <h3 class="section-title">Account Security</h3>
+        
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-container">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              class="form-input"
+              [class.error]="formControls['password'].invalid && formControls['password'].touched"
+              placeholder="Create a strong password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="error-message" *ngIf="getErrorMessage('password')">
+            {{ getErrorMessage('password') }}
+          </div>
+          
+          <!-- Password Strength Indicator -->
+          <div class="password-strength" *ngIf="formControls['password'].value">
+            <div class="strength-bar">
+              <div 
+                class="strength-fill" 
+                [class]="'strength-' + getPasswordStrength()"
+                [style.width.%]="getPasswordStrength() === 'weak' ? 25 : getPasswordStrength() === 'medium' ? 50 : getPasswordStrength() === 'strong' ? 100 : 0"
+              ></div>
+            </div>
+            <span class="strength-text" [class]="'strength-' + getPasswordStrength()">
+              {{ getPasswordStrength() === 'weak' ? 'Weak' : getPasswordStrength() === 'medium' ? 'Medium' : getPasswordStrength() === 'strong' ? 'Strong' : '' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <div class="input-container">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-input"
+              [class.error]="formControls['confirmPassword'].invalid && formControls['confirmPassword'].touched"
+              placeholder="Confirm your password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+            >
+              <svg *ngIf="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="error-message" *ngIf="getErrorMessage('confirmPassword')">
+            {{ getErrorMessage('confirmPassword') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <h3 class="section-title">Additional Information</h3>
+        
+        <div class="form-row">
+          <!-- Date of Birth -->
+          <div class="form-group">
+            <label for="dateOfBirth" class="form-label">Date of Birth</label>
+            <div class="input-container">
+              <input
+                type="date"
+                id="dateOfBirth"
+                formControlName="dateOfBirth"
+                class="form-input"
+                [class.error]="formControls['dateOfBirth'].invalid && formControls['dateOfBirth'].touched"
+              />
+              <div class="input-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="getErrorMessage('dateOfBirth')">
+              {{ getErrorMessage('dateOfBirth') }}
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label for="gender" class="form-label">Gender</label>
+            <div class="input-container">
+              <select
+                id="gender"
+                formControlName="gender"
+                class="form-input"
+                [class.error]="formControls['gender'].invalid && formControls['gender'].touched"
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer-not-to-say">Prefer not to say</option>
+              </select>
+              <div class="input-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="error-message" *ngIf="getErrorMessage('gender')">
+              {{ getErrorMessage('gender') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terms and Conditions -->
+      <div class="form-section">
+        <div class="checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="termsAccepted" class="checkbox-input">
+            <span class="checkbox-mark"></span>
+            <span class="checkbox-label">
+              I agree to the 
+              <a href="#" class="terms-link">Terms and Conditions</a> 
+              and 
+              <a href="#" class="terms-link">Privacy Policy</a>
+            </span>
+          </label>
+          <div class="error-message" *ngIf="getErrorMessage('termsAccepted')">
+            {{ getErrorMessage('termsAccepted') }}
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" formControlName="newsletter" class="checkbox-input">
+            <span class="checkbox-mark"></span>
+            <span class="checkbox-label">
+              Subscribe to our newsletter for updates and offers
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="register-button"
+        [disabled]="isLoading"
+        [class.loading]="isLoading"
+      >
+        <span *ngIf="!isLoading">Create Account</span>
+        <span *ngIf="isLoading" class="loading-spinner">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+          </svg>
+          Creating Account...
+        </span>
+      </button>
+
+      <!-- Login Link -->
+      <div class="login-link">
+        <p>Already have an account? 
+          <button type="button" class="login-button" (click)="onLogin()">
+            Sign in here
+          </button>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>

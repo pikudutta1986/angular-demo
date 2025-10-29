@@ -1,0 +1,235 @@
+<div class="blog-page">
+  <!-- Header Section -->
+  <div class="blog-header">
+    <div class="header-content">
+      <h1 class="page-title">{{ title }}</h1>
+      <p class="page-subtitle">Discover insights, tutorials, and the latest trends in web development</p>
+      
+      <!-- Search Bar -->
+      <div class="search-section">
+        <div class="search-container">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearch()"
+            placeholder="Search articles, topics, or authors..."
+            class="search-input"
+          />
+          <button class="search-btn" (click)="onSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="blog-layout">
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar" [class.mobile-open]="showFilters">
+      <div class="sidebar-header">
+        <h3>Filters</h3>
+        <button class="clear-filters" (click)="clearFilters()">Clear All</button>
+      </div>
+
+      <!-- Categories Filter -->
+      <div class="filter-section">
+        <h4 class="filter-title">Categories</h4>
+        <div class="filter-options">
+          <label class="filter-option">
+            <input
+              type="radio"
+              name="category"
+              value=""
+              [checked]="selectedCategory === ''"
+              (change)="onCategoryChange('')"
+            />
+            <span class="radio-mark"></span>
+            <span class="option-label">All Categories</span>
+            <span class="option-count">{{ blogPosts.length }}</span>
+          </label>
+          <label *ngFor="let category of categories" class="filter-option">
+            <input
+              type="radio"
+              name="category"
+              [value]="category.name"
+              [checked]="selectedCategory === category.name"
+              (change)="onCategoryChange(category.name)"
+            />
+            <span class="radio-mark"></span>
+            <span class="option-label">{{ category.name }}</span>
+            <span class="option-count">{{ category.count }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Tags Filter -->
+      <div class="filter-section">
+        <h4 class="filter-title">Popular Tags</h4>
+        <div class="tags-container">
+          <button
+            *ngFor="let tag of tags.slice(0, 10)"
+            class="tag-btn"
+            [class.active]="selectedTag === tag.name"
+            (click)="onTagChange(selectedTag === tag.name ? '' : tag.name)"
+          >
+            {{ tag.name }} ({{ tag.count }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Sort Options -->
+      <div class="filter-section">
+        <h4 class="filter-title">Sort By</h4>
+        <div class="filter-options">
+          <label *ngFor="let option of sortOptions" class="filter-option">
+            <input
+              type="radio"
+              name="sort"
+              [value]="option.value"
+              [checked]="sortBy === option.value"
+              (change)="onSortChange()"
+              [(ngModel)]="sortBy"
+            />
+            <span class="radio-mark"></span>
+            <span class="option-label">{{ option.label }}</span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Featured Post -->
+      <div *ngIf="featuredPost && currentPage === 1" class="featured-post">
+        <div class="featured-content">
+          <div class="featured-image">
+            <img [src]="featuredPost.featuredImage" [alt]="featuredPost.title">
+            <div class="featured-badge">Featured</div>
+          </div>
+          <div class="featured-info">
+            <div class="post-meta">
+              <span class="category">{{ featuredPost.category }}</span>
+              <span class="date">{{ formatDate(featuredPost.publishDate) }}</span>
+            </div>
+            <h2 class="featured-title">
+              <a [routerLink]="['/blog', featuredPost.slug]">{{ featuredPost.title }}</a>
+            </h2>
+            <p class="featured-excerpt">{{ featuredPost.excerpt }}</p>
+            <div class="featured-footer">
+              <div class="author-info">
+                <img [src]="featuredPost.author.avatar" [alt]="featuredPost.author.name" class="author-avatar">
+                <div class="author-details">
+                  <span class="author-name">{{ featuredPost.author.name }}</span>
+                  <span class="author-bio">{{ featuredPost.author.bio }}</span>
+                </div>
+              </div>
+              <div class="post-stats">
+                <span class="read-time">{{ getReadingTimeText(featuredPost.readTime) }}</span>
+                <span class="views">{{ formatNumber(featuredPost.views) }} views</span>
+                <span class="likes">{{ formatNumber(featuredPost.likes) }} likes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blog Posts Grid -->
+      <div class="posts-grid">
+        <article *ngFor="let post of getPagedPosts()" class="post-card">
+          <div class="post-image">
+            <img [src]="post.featuredImage" [alt]="post.title">
+            <div class="post-category">{{ post.category }}</div>
+          </div>
+          
+          <div class="post-content">
+            <div class="post-meta">
+              <span class="date">{{ formatDate(post.publishDate) }}</span>
+              <span class="read-time">{{ getReadingTimeText(post.readTime) }}</span>
+            </div>
+            
+            <h3 class="post-title">
+              <a [routerLink]="['/blog', post.slug]">{{ post.title }}</a>
+            </h3>
+            
+            <p class="post-excerpt">{{ post.excerpt }}</p>
+            
+            <div class="post-tags">
+              <span *ngFor="let tag of post.tags.slice(0, 3)" class="tag">{{ tag }}</span>
+            </div>
+            
+            <div class="post-footer">
+              <div class="author-info">
+                <img [src]="post.author.avatar" [alt]="post.author.name" class="author-avatar">
+                <div class="author-details">
+                  <span class="author-name">{{ post.author.name }}</span>
+                </div>
+              </div>
+              
+              <div class="post-stats">
+                <span class="views">{{ formatNumber(post.views) }}</span>
+                <span class="likes">{{ formatNumber(post.likes) }}</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- No Results -->
+      <div *ngIf="filteredPosts.length === 0" class="no-results">
+        <div class="no-results-content">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="M21 21l-4.35-4.35"></path>
+          </svg>
+          <h3>No articles found</h3>
+          <p>Try adjusting your search terms or filters</p>
+          <button class="clear-filters-btn" (click)="clearFilters()">Clear All Filters</button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="getTotalPages() > 1" class="pagination">
+        <button 
+          class="page-btn" 
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)"
+        >
+          Previous
+        </button>
+        
+        <div class="page-numbers">
+          <button 
+            *ngFor="let page of [].constructor(getTotalPages())" 
+            class="page-number"
+            [class.active]="currentPage === page + 1"
+            (click)="onPageChange(page + 1)"
+          >
+            {{ page + 1 }}
+          </button>
+        </div>
+        
+        <button 
+          class="page-btn" 
+          [disabled]="currentPage === getTotalPages()"
+          (click)="onPageChange(currentPage + 1)"
+        >
+          Next
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Filter Toggle -->
+  <button class="mobile-filter-toggle" (click)="toggleFilters()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"></polygon>
+    </svg>
+    Filters
+  </button>
+
+  <!-- Mobile Filter Overlay -->
+  <div *ngIf="showFilters" class="mobile-filter-overlay" (click)="toggleFilters()"></div>
+</div>
