@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { BlogService, BlogPostDto } from '../../services/blog.service';
 
 interface BlogPost {
   id: number;
@@ -54,100 +55,53 @@ export class BlogDetailsComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private blogService: BlogService
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      const slug = params['id'];
-      this.loadBlogPost(slug);
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.loadBlogPost(id);
+      }
     });
   }
 
-  private loadBlogPost(slug: string) {
-    // Mock blog post data - in real app, this would come from a service
-    const mockPost: BlogPost = {
-      id: 1,
-      title: 'The Future of Web Development: Trends to Watch in 2024',
-      excerpt: 'Explore the latest trends in web development including AI integration, WebAssembly, and modern frameworks that are shaping the future of the web.',
-      content: `
-        <p>Web development is evolving at an unprecedented pace, with new technologies and frameworks emerging constantly. As we move through 2024, several key trends are shaping the future of how we build and interact with web applications.</p>
+  public loadBlogPost(id: string) {
+    this.blogService.getBlogById(id).subscribe((res) => {
+      const dto = res?.data as BlogPostDto | undefined;
+      if (!dto) {
+        this.blogPost = null;
+        return;
+      }
+      this.blogPost = this.mapDtoToPost(dto);
+      this.loadRelatedPosts();
+    });
+  }
 
-        <h2>1. Artificial Intelligence Integration</h2>
-        <p>AI is becoming increasingly integrated into web development workflows. From code generation tools like GitHub Copilot to AI-powered design systems, developers are leveraging machine learning to streamline their processes.</p>
-
-        <h3>Code Generation and Assistance</h3>
-        <p>AI-powered tools are helping developers write code faster and more efficiently. These tools can suggest code completions, generate boilerplate code, and even help debug issues.</p>
-
-        <h3>Intelligent User Interfaces</h3>
-        <p>Web applications are becoming smarter with AI-driven features like personalized content, intelligent search, and predictive user interfaces.</p>
-
-        <h2>2. WebAssembly (WASM) Adoption</h2>
-        <p>WebAssembly is gaining traction as a way to run high-performance code in browsers. This technology allows developers to use languages like Rust, C++, and Go for web development.</p>
-
-        <h3>Performance Benefits</h3>
-        <p>WASM offers near-native performance for computationally intensive tasks, making it ideal for applications like games, image processing, and scientific computing.</p>
-
-        <h3>Use Cases</h3>
-        <ul>
-          <li>Gaming applications</li>
-          <li>Image and video processing</li>
-          <li>Scientific simulations</li>
-          <li>CAD applications</li>
-        </ul>
-
-        <h2>3. Modern JavaScript Frameworks</h2>
-        <p>Frameworks like React, Vue, and Angular continue to evolve, with new features and improvements being released regularly.</p>
-
-        <h3>React 18+ Features</h3>
-        <p>React 18 introduced concurrent features, automatic batching, and improved server-side rendering capabilities.</p>
-
-        <h3>Vue 3 Composition API</h3>
-        <p>Vue 3's Composition API provides a more flexible way to organize component logic and promotes better code reuse.</p>
-
-        <h2>4. Serverless and Edge Computing</h2>
-        <p>Serverless architectures and edge computing are changing how we deploy and scale web applications.</p>
-
-        <h3>Edge Functions</h3>
-        <p>Edge functions allow code to run closer to users, reducing latency and improving performance.</p>
-
-        <h3>JAMstack Evolution</h3>
-        <p>The JAMstack (JavaScript, APIs, Markup) approach is evolving with new tools and services that make it easier to build fast, secure websites.</p>
-
-        <h2>5. Web3 and Blockchain Integration</h2>
-        <p>While still emerging, Web3 technologies are beginning to influence web development with decentralized applications and blockchain integration.</p>
-
-        <h3>Decentralized Applications (DApps)</h3>
-        <p>DApps are web applications that interact with blockchain networks, offering new possibilities for user ownership and data control.</p>
-
-        <h2>Conclusion</h2>
-        <p>The future of web development is exciting and full of possibilities. As these trends continue to evolve, developers who stay informed and adapt to new technologies will be well-positioned to build the next generation of web applications.</p>
-
-        <p>Whether you're a seasoned developer or just starting out, embracing these trends and continuously learning will help you stay relevant in this rapidly changing field.</p>
-      `,
+  private mapDtoToPost(dto: BlogPostDto): BlogPost {
+    return {
+      id: 0,
+      title: dto.title,
+      excerpt: dto.content?.slice(0, 180) || '',
+      content: dto.content,
       author: {
-        name: 'Sarah Johnson',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
-        bio: 'Senior Web Developer with 8+ years experience in modern web technologies',
-        social: {
-          twitter: 'https://twitter.com/sarahjohnson',
-          linkedin: 'https://linkedin.com/in/sarahjohnson',
-          github: 'https://github.com/sarahjohnson'
-        }
+        name: 'Unknown',
+        avatar: 'https://via.placeholder.com/100',
+        bio: '',
+        social: {}
       },
-      category: 'Web Development',
-      tags: ['web development', 'trends', '2024', 'technology', 'ai', 'webassembly'],
-      featuredImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800',
-      publishDate: '2024-01-15',
-      readTime: 8,
-      views: 1250,
-      likes: 89,
-      isFeatured: true,
-      slug: 'future-web-development-trends-2024'
+      category: dto.category || 'General',
+      tags: [],
+      featuredImage: 'https://via.placeholder.com/800x400',
+      publishDate: dto.createdAt || new Date().toISOString(),
+      readTime: 6,
+      views: 0,
+      likes: 0,
+      isFeatured: false,
+      slug: dto._id
     };
-
-    this.blogPost = mockPost;
-    this.loadRelatedPosts();
   }
 
   private loadRelatedPosts() {

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { BlogService, BlogPostDto } from '../../services/blog.service';
 
 interface BlogPost {
   id: number;
@@ -74,200 +75,52 @@ export class BlogComponent implements OnInit {
     { value: 'trending', label: 'Trending' }
   ];
 
-  constructor() {}
+  constructor(private blogService: BlogService) {}
 
   ngOnInit() {
-    this.initializeBlogData();
-    this.initializeFilters();
-    this.applyFilters();
+    this.loadBlogs();
   }
 
-  private initializeBlogData() {
-    this.blogPosts = [
-      {
-        id: 1,
-        title: 'The Future of Web Development: Trends to Watch in 2024',
-        excerpt: 'Explore the latest trends in web development including AI integration, WebAssembly, and modern frameworks that are shaping the future of the web.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Sarah Johnson',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
-          bio: 'Senior Web Developer with 8+ years experience'
-        },
-        category: 'Web Development',
-        tags: ['web development', 'trends', '2024', 'technology'],
-        featuredImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800',
-        publishDate: '2024-01-15',
-        readTime: 8,
-        views: 1250,
-        likes: 89,
-        isFeatured: true,
-        slug: 'future-web-development-trends-2024'
+  private mapDtoToPost(dto: BlogPostDto): BlogPost {
+    return {
+      id: 0,
+      title: dto.title,
+      excerpt: dto.content?.slice(0, 140) || '',
+      content: dto.content,
+      author: {
+        name: 'Unknown',
+        avatar: 'https://via.placeholder.com/100',
+        bio: ''
       },
-      {
-        id: 2,
-        title: 'Getting Started with Angular 17: A Complete Guide',
-        excerpt: 'Learn the fundamentals of Angular 17 with this comprehensive guide covering components, services, routing, and best practices.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Mike Chen',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-          bio: 'Angular Expert and Technical Writer'
-        },
-        category: 'Angular',
-        tags: ['angular', 'tutorial', 'javascript', 'framework'],
-        featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800',
-        publishDate: '2024-01-12',
-        readTime: 12,
-        views: 980,
-        likes: 67,
-        isFeatured: false,
-        slug: 'getting-started-angular-17-complete-guide'
-      },
-      {
-        id: 3,
-        title: 'CSS Grid vs Flexbox: When to Use Which',
-        excerpt: 'A detailed comparison of CSS Grid and Flexbox, including practical examples and guidelines for choosing the right layout method.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Emily Rodriguez',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-          bio: 'Frontend Developer and CSS Specialist'
-        },
-        category: 'CSS',
-        tags: ['css', 'grid', 'flexbox', 'layout'],
-        featuredImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
-        publishDate: '2024-01-10',
-        readTime: 6,
-        views: 756,
-        likes: 45,
-        isFeatured: false,
-        slug: 'css-grid-vs-flexbox-when-to-use-which'
-      },
-      {
-        id: 4,
-        title: 'Building Scalable React Applications: Best Practices',
-        excerpt: 'Discover essential patterns and practices for building large-scale React applications that are maintainable and performant.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'David Kim',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-          bio: 'React Developer and Open Source Contributor'
-        },
-        category: 'React',
-        tags: ['react', 'scalability', 'best practices', 'architecture'],
-        featuredImage: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800',
-        publishDate: '2024-01-08',
-        readTime: 10,
-        views: 1100,
-        likes: 78,
-        isFeatured: true,
-        slug: 'building-scalable-react-applications-best-practices'
-      },
-      {
-        id: 5,
-        title: 'JavaScript ES2024: New Features and Improvements',
-        excerpt: 'Explore the latest JavaScript features introduced in ES2024 and how they can improve your development workflow.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Alex Thompson',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-          bio: 'JavaScript Developer and Language Enthusiast'
-        },
-        category: 'JavaScript',
-        tags: ['javascript', 'es2024', 'new features', 'programming'],
-        featuredImage: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=800',
-        publishDate: '2024-01-05',
-        readTime: 7,
-        views: 890,
-        likes: 56,
-        isFeatured: false,
-        slug: 'javascript-es2024-new-features-improvements'
-      },
-      {
-        id: 6,
-        title: 'The Complete Guide to TypeScript 5.0',
-        excerpt: 'Master TypeScript 5.0 with this comprehensive guide covering new features, improvements, and advanced techniques.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Lisa Wang',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
-          bio: 'TypeScript Expert and Software Architect'
-        },
-        category: 'TypeScript',
-        tags: ['typescript', 'guide', 'types', 'development'],
-        featuredImage: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800',
-        publishDate: '2024-01-03',
-        readTime: 15,
-        views: 1340,
-        likes: 92,
-        isFeatured: true,
-        slug: 'complete-guide-typescript-5-0'
-      },
-      {
-        id: 7,
-        title: 'Node.js Performance Optimization Techniques',
-        excerpt: 'Learn how to optimize your Node.js applications for better performance, scalability, and resource efficiency.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'James Wilson',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-          bio: 'Backend Developer and Performance Engineer'
-        },
-        category: 'Node.js',
-        tags: ['nodejs', 'performance', 'optimization', 'backend'],
-        featuredImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800',
-        publishDate: '2024-01-01',
-        readTime: 9,
-        views: 720,
-        likes: 41,
-        isFeatured: false,
-        slug: 'nodejs-performance-optimization-techniques'
-      },
-      {
-        id: 8,
-        title: 'Design Systems: Building Consistent UI Components',
-        excerpt: 'Create a cohesive design system that ensures consistency across your applications and improves developer experience.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Maria Garcia',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-          bio: 'UI/UX Designer and Design System Expert'
-        },
-        category: 'Design',
-        tags: ['design systems', 'ui', 'ux', 'components'],
-        featuredImage: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800',
-        publishDate: '2023-12-28',
-        readTime: 11,
-        views: 950,
-        likes: 63,
-        isFeatured: false,
-        slug: 'design-systems-building-consistent-ui-components'
-      },
-      {
-        id: 9,
-        title: 'Microservices Architecture: A Practical Approach',
-        excerpt: 'Implement microservices architecture effectively with practical patterns, tools, and real-world examples.',
-        content: 'Full blog post content here...',
-        author: {
-          name: 'Robert Lee',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-          bio: 'Software Architect and Microservices Expert'
-        },
-        category: 'Architecture',
-        tags: ['microservices', 'architecture', 'distributed systems', 'scalability'],
-        featuredImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800',
-        publishDate: '2023-12-25',
-        readTime: 14,
-        views: 1080,
-        likes: 74,
-        isFeatured: true,
-        slug: 'microservices-architecture-practical-approach'
-      }
-    ];
+      category: dto.category || 'General',
+      tags: [],
+      featuredImage: 'https://via.placeholder.com/800x400',
+      publishDate: dto.createdAt || new Date().toISOString(),
+      readTime: 5,
+      views: 0,
+      likes: 0,
+      isFeatured: false,
+      slug: dto._id
+    };
+  }
 
-    // Set featured post
-    this.featuredPost = this.blogPosts.find(post => post.isFeatured) || this.blogPosts[0];
+  public loadBlogs() {
+    this.blogService
+      .getBlogs({
+        search: this.searchQuery || undefined,
+        category: this.selectedCategory || undefined,
+        tag: this.selectedTag || undefined,
+        sort: this.sortBy || undefined,
+        page: this.currentPage,
+        pageSize: this.postsPerPage
+      })
+      .subscribe((res) => {
+        const items = res?.data || [];
+        this.blogPosts = items.map(i => this.mapDtoToPost(i));
+        this.initializeFilters();
+        this.applyFilters();
+        this.featuredPost = this.blogPosts.find(post => post.isFeatured) || this.blogPosts[0] || null;
+      });
   }
 
   private initializeFilters() {
@@ -300,20 +153,24 @@ export class BlogComponent implements OnInit {
   }
 
   onSearch() {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   onCategoryChange(category: string) {
     this.selectedCategory = category;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   onTagChange(tag: string) {
     this.selectedTag = tag;
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   onSortChange() {
+    this.currentPage = 1;
     this.applyFilters();
   }
 
@@ -322,6 +179,7 @@ export class BlogComponent implements OnInit {
     this.selectedCategory = '';
     this.selectedTag = '';
     this.sortBy = 'newest';
+    this.currentPage = 1;
     this.applyFilters();
   }
 
