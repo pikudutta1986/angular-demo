@@ -52,6 +52,8 @@ export class BlogDetailsComponent implements OnInit {
   relatedPosts: RelatedPost[] = [];
   showTableOfContents = false;
   currentHeading = '';
+  isLoading = true;
+  errorMessage: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -69,34 +71,60 @@ export class BlogDetailsComponent implements OnInit {
   }
 
   public loadBlogPost(id: string) {
-    this.blogService.getBlogById(id).subscribe((res) => {
-      const dto = res?.data as BlogPostDto | undefined;
-      if (!dto) {
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.blogPost = null;
+    
+    this.blogService.getBlogById(id).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        // Handle error response from API
+        if (res.error) {
+          console.error('Blog not found:', res.error);
+          this.errorMessage = res.error || 'Blog post not found';
+          this.blogPost = null;
+          return;
+        }
+        
+        const dto = res?.data as BlogPostDto | undefined;
+        if (!dto) {
+          this.errorMessage = 'Blog post not found';
+          this.blogPost = null;
+          return;
+        }
+        this.blogPost = this.mapDtoToPost(dto);
+        this.loadRelatedPosts(dto.category);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error loading blog post:', err);
+        this.errorMessage = err.error?.error || err.message || 'Failed to load blog post';
         this.blogPost = null;
-        return;
       }
-      this.blogPost = this.mapDtoToPost(dto);
-      this.loadRelatedPosts();
     });
   }
 
   private mapDtoToPost(dto: BlogPostDto): BlogPost {
+    // Calculate reading time (average 200 words per minute)
+    const wordCount = dto.content?.split(/\s+/).length || 0;
+    const readTime = Math.max(1, Math.ceil(wordCount / 200));
+    
     return {
       id: 0,
-      title: dto.title,
+      title: dto.title || '',
       excerpt: dto.content?.slice(0, 180) || '',
-      content: dto.content,
+      content: dto.content || '',
       author: {
         name: 'Unknown',
-        avatar: 'https://via.placeholder.com/100',
+        avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
         bio: '',
         social: {}
       },
       category: dto.category || 'General',
-      tags: [],
-      featuredImage: 'https://via.placeholder.com/800x400',
+      tags: dto.tags || [],
+      featuredImage: dto.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
       publishDate: dto.createdAt || new Date().toISOString(),
-      readTime: 6,
+      readTime: readTime,
       views: 0,
       likes: 0,
       isFeatured: false,
@@ -104,36 +132,35 @@ export class BlogDetailsComponent implements OnInit {
     };
   }
 
-  private loadRelatedPosts() {
-    this.relatedPosts = [
-      {
-        id: 2,
-        title: 'Getting Started with Angular 17: A Complete Guide',
-        excerpt: 'Learn the fundamentals of Angular 17 with this comprehensive guide covering components, services, routing, and best practices.',
-        featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-        publishDate: '2024-01-12',
-        readTime: 12,
-        slug: 'getting-started-angular-17-complete-guide'
+  private loadRelatedPosts(category?: string) {
+    // Load related posts from the same category
+    this.blogService.getBlogs({ category }).subscribe({
+      next: (res) => {
+        const items = res?.data || [];
+        // Exclude current post and limit to 3 related posts
+        const related = items
+          .filter(item => item._id !== this.blogPost?.slug)
+          .slice(0, 3)
+          .map(item => {
+            const wordCount = item.content?.split(/\s+/).length || 0;
+            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+            return {
+              id: 0,
+              title: item.title || '',
+              excerpt: item.content?.slice(0, 120) || '',
+              featuredImage: item.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
+              publishDate: item.createdAt || new Date().toISOString(),
+              readTime: readTime,
+              slug: item._id
+            };
+          });
+        this.relatedPosts = related;
       },
-      {
-        id: 4,
-        title: 'Building Scalable React Applications: Best Practices',
-        excerpt: 'Discover essential patterns and practices for building large-scale React applications that are maintainable and performant.',
-        featuredImage: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400',
-        publishDate: '2024-01-08',
-        readTime: 10,
-        slug: 'building-scalable-react-applications-best-practices'
-      },
-      {
-        id: 6,
-        title: 'The Complete Guide to TypeScript 5.0',
-        excerpt: 'Master TypeScript 5.0 with this comprehensive guide covering new features, improvements, and advanced techniques.',
-        featuredImage: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400',
-        publishDate: '2024-01-03',
-        readTime: 15,
-        slug: 'complete-guide-typescript-5-0'
+      error: (err) => {
+        console.error('Error loading related posts:', err);
+        this.relatedPosts = [];
       }
-    ];
+    });
   }
 
   onRelatedPostClick(slug: string) {
@@ -181,5 +208,9 @@ export class BlogDetailsComponent implements OnInit {
 
   toggleTableOfContents() {
     this.showTableOfContents = !this.showTableOfContents;
+  }
+
+  goToBlogList() {
+    this.router.navigate(['/blog']);
   }
 }

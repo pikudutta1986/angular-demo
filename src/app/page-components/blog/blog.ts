@@ -82,21 +82,25 @@ export class BlogComponent implements OnInit {
   }
 
   private mapDtoToPost(dto: BlogPostDto): BlogPost {
+    // Calculate reading time (average 200 words per minute)
+    const wordCount = dto.content?.split(/\s+/).length || 0;
+    const readTime = Math.max(1, Math.ceil(wordCount / 200));
+    
     return {
       id: 0,
-      title: dto.title,
+      title: dto.title || '',
       excerpt: dto.content?.slice(0, 140) || '',
-      content: dto.content,
+      content: dto.content || '',
       author: {
         name: 'Unknown',
-        avatar: 'https://via.placeholder.com/100',
+        avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
         bio: ''
       },
       category: dto.category || 'General',
-      tags: [],
-      featuredImage: 'https://via.placeholder.com/800x400',
+      tags: dto.tags || [],
+      featuredImage: dto.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
       publishDate: dto.createdAt || new Date().toISOString(),
-      readTime: 5,
+      readTime: readTime,
       views: 0,
       likes: 0,
       isFeatured: false,
@@ -107,19 +111,22 @@ export class BlogComponent implements OnInit {
   public loadBlogs() {
     this.blogService
       .getBlogs({
-        search: this.searchQuery || undefined,
-        category: this.selectedCategory || undefined,
-        tag: this.selectedTag || undefined,
-        sort: this.sortBy || undefined,
-        page: this.currentPage,
-        pageSize: this.postsPerPage
+        category: this.selectedCategory || undefined
       })
-      .subscribe((res) => {
-        const items = res?.data || [];
-        this.blogPosts = items.map(i => this.mapDtoToPost(i));
-        this.initializeFilters();
-        this.applyFilters();
-        this.featuredPost = this.blogPosts.find(post => post.isFeatured) || this.blogPosts[0] || null;
+      .subscribe({
+        next: (res) => {
+          const items = res?.data || [];
+          this.blogPosts = items.map(i => this.mapDtoToPost(i));
+          this.initializeFilters();
+          this.applyFilters();
+          this.featuredPost = this.blogPosts[0] || null;
+        },
+        error: (err) => {
+          console.error('Error loading blogs:', err);
+          this.blogPosts = [];
+          this.filteredPosts = [];
+          this.featuredPost = null;
+        }
       });
   }
 
@@ -160,7 +167,7 @@ export class BlogComponent implements OnInit {
   onCategoryChange(category: string) {
     this.selectedCategory = category;
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadBlogs(); // Reload from API with category filter
   }
 
   onTagChange(tag: string) {

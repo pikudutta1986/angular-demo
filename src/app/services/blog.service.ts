@@ -6,6 +6,9 @@ import { environment } from '../../environments/environment';
 export interface BlogPostDto {
   _id: string;
   title: string;
+  slug: string;
+  image_url: string;
+  tags: string[];
   category: string;
   content: string;
   createdAt?: string;
@@ -24,19 +27,20 @@ export class BlogService {
 
   constructor(private http: HttpClient) {}
 
-  getBlogs(_params?: {
-    search?: string;
+  getBlogs(params?: {
     category?: string;
-    tag?: string;
-    sort?: string;
-    page?: number;
-    pageSize?: number;
   }): Observable<BlogApiResponse> {
-    return this.http.get<BlogApiResponse>(`${this.baseUrl}/blog`);
+    let httpParams = new HttpParams();
+    if (params?.category) {
+      httpParams = httpParams.set('category', params.category);
+    }
+    return this.http.get<BlogApiResponse>(`${this.baseUrl}/blog`, {
+      params: httpParams
+    });
   }
 
-  getBlogById(id: string): Observable<{ success: boolean; data: BlogPostDto; message?: string }> {
-    return this.http.get<{ success: boolean; data: BlogPostDto; message?: string }>(
+  getBlogById(id: string): Observable<{ success: boolean; data: BlogPostDto; message?: string; error?: string }> {
+    return this.http.get<{ success: boolean; data: BlogPostDto; message?: string; error?: string }>(
       `${this.baseUrl}/blog/${id}`
     );
   }

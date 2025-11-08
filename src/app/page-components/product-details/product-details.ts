@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { ProductService, ProductDto } from '../../services/product.service';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 interface ProductImage {
   id: number;
@@ -58,7 +61,7 @@ interface ProductDetails {
   templateUrl: './product-details.html',
   styleUrl: './product-details.scss'
 })
-export class ProductDetailsComponent implements OnInit {
+export class ProductDetailsComponent implements OnInit, OnDestroy {
   title = 'Product Details';
   product: ProductDetails | null = null;
   selectedImageIndex = 0;
@@ -67,103 +70,227 @@ export class ProductDetailsComponent implements OnInit {
   activeTab = 'description';
   showImageModal = false;
   selectedImageForModal = '';
+  isLoading = true;
+  errorMessage: string | null = null;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private productService: ProductService
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      const productId = +params['id'];
-      this.loadProduct(productId);
+    // Load product immediately from route snapshot (for initial load)
+    const productId = this.route.snapshot.paramMap.get('id');
+    if (productId) {
+      this.loadProduct(+productId);
+    } else {
+      this.isLoading = false;
+      this.errorMessage = 'Invalid product ID';
+    }
+
+    // Subscribe to route parameter changes (for navigation between products)
+    this.route.paramMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const newProductId = params.get('id');
+        if (newProductId) {
+          const id = +newProductId;
+          // Only reload if the ID actually changed (avoid reload on same product)
+          if (!this.product || this.product.id !== id) {
+            this.loadProduct(id);
+          }
+        } else {
+          this.isLoading = false;
+          this.errorMessage = 'Invalid product ID';
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  public loadProduct(id: number) {
+    // Reset state when loading new product
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.product = null;
+    this.selectedImageIndex = 0;
+    this.selectedVariants = {};
+    this.quantity = 1;
+    this.activeTab = 'description';
+
+    if (!id || isNaN(id)) {
+      this.isLoading = false;
+      this.errorMessage = 'Invalid product ID';
+      return;
+    }
+
+    this.productService.getProductById(id).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.error) {
+          this.errorMessage = res.error || 'Product not found';
+          this.product = null;
+          return;
+        }
+        const dto = res?.data;
+        if (!dto) {
+          this.errorMessage = 'Product not found';
+          this.product = null;
+          return;
+        }
+        this.product = this.mapDtoToProductDetails(dto);
+        this.initializeVariants();
+        this.loadRelatedProducts(dto.category);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error loading product:', err);
+        
+        // Handle different error types
+        if (err.status === 404) {
+          this.errorMessage = 'Product not found';
+        } else if (err.status === 400) {
+          this.errorMessage = err.error?.message || 'Invalid product request';
+        } else if (err.status >= 500) {
+          this.errorMessage = 'Server error. Please try again later.';
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Failed to load product';
+        }
+        this.product = null;
+      }
     });
   }
 
-  private loadProduct(id: number) {
-    // Mock product data - in real app, this would come from a service
-    const mockProduct: ProductDetails = {
-      id: id,
-      name: 'Wireless Bluetooth Headphones',
-      price: 99.99,
-      originalPrice: 149.99,
-      images: [
-        { id: 1, url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800', alt: 'Headphones front view', isMain: true },
-        { id: 2, url: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800', alt: 'Headphones side view', isMain: false },
-        { id: 3, url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800', alt: 'Headphones in case', isMain: false },
-        { id: 4, url: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=800', alt: 'Headphones with phone', isMain: false }
-      ],
-      category: 'Electronics',
-      brand: 'TechSound',
-      rating: 4.5,
-      reviewCount: 128,
-      inStock: true,
-      isNew: false,
-      isSale: true,
-      tags: ['wireless', 'bluetooth', 'audio', 'noise-cancelling'],
-      description: 'High-quality wireless headphones with noise cancellation',
-      longDescription: 'Experience premium sound quality with our advanced wireless Bluetooth headphones. Featuring active noise cancellation technology, these headphones provide crystal-clear audio and exceptional comfort for extended listening sessions. Perfect for music lovers, professionals, and anyone who appreciates superior sound quality.',
-      specifications: {
-        'Connectivity': 'Bluetooth 5.0',
-        'Battery Life': '30 hours',
-        'Charging Time': '2 hours',
-        'Weight': '250g',
-        'Driver Size': '40mm',
-        'Frequency Response': '20Hz - 20kHz',
-        'Impedance': '32 Ohms',
-        'Noise Cancellation': 'Active',
-        'Water Resistance': 'IPX4',
-        'Warranty': '2 years'
-      },
-      variants: [
-        { id: 1, name: 'Color', value: 'Black', inStock: true },
-        { id: 2, name: 'Color', value: 'White', inStock: true },
-        { id: 3, name: 'Color', value: 'Blue', inStock: false },
-        { id: 4, name: 'Size', value: 'Small', inStock: true },
-        { id: 5, name: 'Size', value: 'Medium', inStock: true },
-        { id: 6, name: 'Size', value: 'Large', inStock: true }
-      ],
-      reviews: [
-        {
-          id: 1,
-          userName: 'John Smith',
-          rating: 5,
-          date: '2024-01-15',
-          title: 'Excellent sound quality!',
-          comment: 'These headphones exceeded my expectations. The noise cancellation is incredible and the sound quality is top-notch. Highly recommended!',
-          verified: true,
-          helpful: 12
-        },
-        {
-          id: 2,
-          userName: 'Sarah Johnson',
-          rating: 4,
-          date: '2024-01-10',
-          title: 'Great value for money',
-          comment: 'Good headphones for the price. Battery life is excellent and they are very comfortable to wear for long periods.',
-          verified: true,
-          helpful: 8
-        },
-        {
-          id: 3,
-          userName: 'Mike Wilson',
-          rating: 5,
-          date: '2024-01-08',
-          title: 'Perfect for work from home',
-          comment: 'I use these for video calls and music while working. The microphone quality is great and the noise cancellation helps me focus.',
-          verified: false,
-          helpful: 5
-        }
-      ],
-      relatedProducts: [
-        { id: 2, name: 'Smart Fitness Watch', price: 199.99, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300', rating: 4.8 },
-        { id: 4, name: 'Professional Camera Lens', price: 599.99, image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=300', rating: 4.9 },
-        { id: 9, name: 'Gaming Mechanical Keyboard', price: 129.99, image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=300', rating: 4.8 }
-      ]
-    };
+  private mapDtoToProductDetails(dto: ProductDto): ProductDetails {
+    // Validate required fields
+    if (!dto || !dto.id) {
+      throw new Error('Invalid product data');
+    }
 
-    this.product = mockProduct;
-    this.initializeVariants();
+    // Parse images from pipe-separated string
+    const imageUrls = dto.images?.split('|').map(url => url.trim()).filter(url => url && url.length > 0) || [];
+    const images: ProductImage[] = imageUrls.map((url, index) => ({
+      id: index + 1,
+      url: url,
+      alt: `${dto.name || 'Product'} - Image ${index + 1}`,
+      isMain: index === 0
+    }));
+
+    // If no images, add a placeholder
+    if (images.length === 0) {
+      images.push({
+        id: 1,
+        url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=',
+        alt: dto.name || 'Product image',
+        isMain: true
+      });
+    }
+
+    // Parse specifications from pipe-separated string
+    const specifications: { [key: string]: string } = {};
+    if (dto.specification && dto.specification.trim()) {
+      const specs = dto.specification.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      specs.forEach(spec => {
+        const parts = spec.split(':').map(p => p.trim());
+        if (parts.length >= 2) {
+          const key = parts[0];
+          const value = parts.slice(1).join(': ').trim();
+          if (key) {
+            specifications[key] = value || '';
+          }
+        } else if (spec) {
+          specifications[spec] = '';
+        }
+      });
+    }
+
+    // Calculate if product is new (created within last 30 days)
+    let isNew = false;
+    if (dto.created_at) {
+      try {
+        const createdAt = new Date(dto.created_at);
+        if (!isNaN(createdAt.getTime())) {
+          const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+          isNew = daysSinceCreation <= 30;
+        }
+      } catch (e) {
+        console.warn('Invalid created_at date:', dto.created_at);
+      }
+    }
+
+    // Extract tags from specification or use empty array
+    const tags: string[] = [];
+    if (dto.specification && dto.specification.trim()) {
+      const specParts = dto.specification.split('|').map(s => s.trim()).filter(s => s.length > 0);
+      specParts.forEach(spec => {
+        const key = spec.split(':')[0]?.trim();
+        if (key && !tags.includes(key)) {
+          tags.push(key);
+        }
+      });
+    }
+
+    return {
+      id: dto.id,
+      name: dto.name || '',
+      price: dto.price || 0,
+      originalPrice: undefined, // API doesn't provide original price
+      images: images,
+      category: dto.category || 'General',
+      brand: 'Brand', // API doesn't provide brand
+      rating: 4.0, // Default rating
+      reviewCount: 0, // Default review count
+      inStock: true, // Default to in stock
+      isNew: isNew,
+      isSale: false, // API doesn't provide sale status
+      tags: tags,
+      description: dto.description || '',
+      longDescription: dto.description || '', // Use description as long description
+      specifications: specifications,
+      variants: [], // API doesn't provide variants
+      reviews: [], // API doesn't provide reviews
+      relatedProducts: []
+    };
+  }
+
+  private loadRelatedProducts(category?: string) {
+    if (!category) {
+      return;
+    }
+
+    this.productService.getProducts({ category, pageSize: 4 }).subscribe({
+      next: (res) => {
+        const items = res?.data || [];
+        const related = items
+          .filter(item => item.id !== this.product?.id)
+          .slice(0, 3)
+          .map(item => {
+            const imageUrl = item.images?.split('|')[0]?.trim() || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+            return {
+              id: item.id,
+              name: item.name || '',
+              price: item.price || 0,
+              image: imageUrl,
+              rating: 4.0
+            };
+          });
+        if (this.product) {
+          this.product.relatedProducts = related;
+        }
+      },
+      error: (err) => {
+        console.error('Error loading related products:', err);
+        // Don't show error to user, just log it
+        if (this.product) {
+          this.product.relatedProducts = [];
+        }
+      }
+    });
   }
 
   private initializeVariants() {
@@ -268,5 +395,16 @@ export class ProductDetailsComponent implements OnInit {
 
   onRelatedProductClick(productId: number) {
     this.router.navigate(['/product', productId]);
+  }
+
+  goToProducts() {
+    this.router.navigate(['/products']);
+  }
+
+  retryLoad() {
+    const productId = this.route.snapshot.paramMap.get('id');
+    if (productId) {
+      this.loadProduct(+productId);
+    }
   }
 }

@@ -1,4 +1,33 @@
-<div class="product-details-page" *ngIf="product">
+<div class="product-details-page">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="loading-spinner">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+      </svg>
+    </div>
+    <p>Loading product...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && errorMessage" class="error-state">
+    <div class="error-content">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <h3>Product Not Found</h3>
+      <p>{{ errorMessage }}</p>
+      <div class="error-actions">
+        <button class="retry-btn" (click)="retryLoad()">Retry</button>
+        <button class="back-btn" (click)="goToProducts()">Back to Products</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Content -->
+  <div *ngIf="!isLoading && !errorMessage && product">
   <!-- Breadcrumb -->
   <nav class="breadcrumb">
     <a routerLink="/home">Home</a>
@@ -20,6 +49,7 @@
             [src]="product.images[selectedImageIndex].url" 
             [alt]="product.images[selectedImageIndex].alt"
             (click)="onImageClick(product.images[selectedImageIndex].url)"
+            (error)="$event.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='"
             class="product-image"
           />
           
@@ -52,7 +82,7 @@
             [class.active]="i === selectedImageIndex"
             (click)="onImageSelect(i)"
           >
-            <img [src]="image.url" [alt]="image.alt" class="thumbnail">
+            <img [src]="image.url" [alt]="image.alt" class="thumbnail" (error)="$event.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
           </button>
         </div>
       </div>
@@ -172,7 +202,7 @@
             <li>30-hour battery life with quick charge capability</li>
             <li>Comfortable over-ear design for extended listening</li>
             <li>Bluetooth 5.0 connectivity with stable connection</li>
-            <li>Water-resistant design (IPX4 rating)</li>
+            <li>Water-resistant design (IPX4 rating) dfdg</li>
           </ul>
         </div>
       </div>
@@ -295,7 +325,7 @@
              class="related-item"
              (click)="onRelatedProductClick(relatedProduct.id)">
           <div class="related-image">
-            <img [src]="relatedProduct.image" [alt]="relatedProduct.name">
+            <img [src]="relatedProduct.image" [alt]="relatedProduct.name" (error)="$event.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
           </div>
           <div class="related-info">
             <h4 class="related-name">{{ relatedProduct.name }}</h4>
@@ -326,14 +356,5 @@
       <img [src]="selectedImageForModal" [alt]="product.name" class="modal-image">
     </div>
   </div>
-</div>
-
-<!-- Loading State -->
-<div *ngIf="!product" class="loading-state">
-  <div class="loading-spinner">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 12a9 9 0 11-6.219-8.56"></path>
-    </svg>
   </div>
-  <p>Loading product details...</p>
 </div>
