@@ -106,30 +106,20 @@
       <div *ngIf="featuredPost && currentPage === 1" class="featured-post">
         <div class="featured-content">
           <div class="featured-image">
-            <img [src]="featuredPost.featuredImage" [alt]="featuredPost.title">
+            <img [src]="featuredPost.image_url" [alt]="featuredPost.title">
             <div class="featured-badge">Featured</div>
           </div>
           <div class="featured-info">
             <div class="post-meta">
               <span class="category">{{ featuredPost.category }}</span>
-              <span class="date">{{ formatDate(featuredPost.publishDate) }}</span>
             </div>
             <h2 class="featured-title">
               <a [routerLink]="['/blog', featuredPost.slug]">{{ featuredPost.title }}</a>
             </h2>
-            <p class="featured-excerpt">{{ featuredPost.excerpt }}</p>
+            <p class="featured-excerpt">{{ featuredPost.content }}</p>
             <div class="featured-footer">
-              <div class="author-info">
-                <img [src]="featuredPost.author.avatar" [alt]="featuredPost.author.name" class="author-avatar">
-                <div class="author-details">
-                  <span class="author-name">{{ featuredPost.author.name }}</span>
-                  <span class="author-bio">{{ featuredPost.author.bio }}</span>
-                </div>
-              </div>
               <div class="post-stats">
-                <span class="read-time">{{ getReadingTimeText(featuredPost.readTime) }}</span>
-                <span class="views">{{ formatNumber(featuredPost.views) }} views</span>
-                <span class="likes">{{ formatNumber(featuredPost.likes) }} likes</span>
+                <span class="views" *ngFor="let tag of featuredPost.tags">{{ tag }}</span>
               </div>
             </div>
           </div>
@@ -140,39 +130,20 @@
       <div class="posts-grid">
         <article *ngFor="let post of getPagedPosts()" class="post-card">
           <div class="post-image">
-            <img [src]="post.featuredImage" [alt]="post.title">
+            <img [src]="post.image_url" [alt]="post.title">
             <div class="post-category">{{ post.category }}</div>
           </div>
           
           <div class="post-content">
-            <div class="post-meta">
-              <span class="date">{{ formatDate(post.publishDate) }}</span>
-              <span class="read-time">{{ getReadingTimeText(post.readTime) }}</span>
-            </div>
-            
             <h3 class="post-title">
               <a [routerLink]="['/blog', post.slug]">{{ post.title }}</a>
             </h3>
             
-            <p class="post-excerpt">{{ post.excerpt }}</p>
+            <p class="post-excerpt">{{ post.content }}</p>
             
             <div class="post-tags">
-              <span *ngFor="let tag of post.tags.slice(0, 3)" class="tag">{{ tag }}</span>
-            </div>
-            
-            <div class="post-footer">
-              <div class="author-info">
-                <img [src]="post.author.avatar" [alt]="post.author.name" class="author-avatar">
-                <div class="author-details">
-                  <span class="author-name">{{ post.author.name }}</span>
-                </div>
-              </div>
-              
-              <div class="post-stats">
-                <span class="views">{{ formatNumber(post.views) }}</span>
-                <span class="likes">{{ formatNumber(post.likes) }}</span>
-              </div>
-            </div>
+              <span *ngFor="let tag of post.tags" class="tag">{{ tag }}</span>
+            </div>            
           </div>
         </article>
       </div>
@@ -191,7 +162,7 @@
       </div>
 
       <!-- Pagination -->
-      <div *ngIf="getTotalPages() > 1" class="pagination">
+      <div *ngIf="totalPages > 1" class="pagination">
         <button 
           class="page-btn" 
           [disabled]="currentPage === 1"
@@ -202,7 +173,7 @@
         
         <div class="page-numbers">
           <button 
-            *ngFor="let page of [].constructor(getTotalPages())" 
+            *ngFor="let page of getPageNumbers()" 
             class="page-number"
             [class.active]="currentPage === page + 1"
             (click)="onPageChange(page + 1)"
@@ -213,7 +184,7 @@
         
         <button 
           class="page-btn" 
-          [disabled]="currentPage === getTotalPages()"
+          [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
         >
           Next
