@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -14,10 +15,12 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoading = false;
   showPassword = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -59,15 +62,28 @@ export class LoginComponent implements OnInit {
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading = true;
+      this.errorMessage = '';
       
-      // Simulate API call
-      setTimeout(() => {
-        console.log('Login form submitted:', this.loginForm.value);
-        this.isLoading = false;
-        
-        // Navigate to home page after successful login
-        this.router.navigate(['/home']);
-      }, 2000);
+      const credentials = {
+        email: this.loginForm.value.email,
+        password: this.loginForm.value.password
+      };
+
+      this.authService.login(credentials).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          if (response.success) {
+            // Navigate to home page after successful login
+            this.router.navigate(['/home']);
+          } else {
+            this.errorMessage = response.message || 'Login failed. Please try again.';
+          }
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'An error occurred during login. Please try again.';
+        }
+      });
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.formControls).forEach(key => {

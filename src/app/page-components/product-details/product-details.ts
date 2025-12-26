@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService, ProductDto } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
@@ -64,6 +65,7 @@ interface ProductDetails {
 export class ProductDetailsComponent implements OnInit, OnDestroy {
   title = 'Product Details';
   product: ProductDetails | null = null;
+  productDto: ProductDto | null = null;
   selectedImageIndex = 0;
   selectedVariants: { [key: string]: string } = {};
   quantity = 1;
@@ -77,7 +79,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
+    private cartService: CartService
   ) {}
 
   ngOnInit() {
@@ -141,8 +144,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         if (!dto) {
           this.errorMessage = 'Product not found';
           this.product = null;
+          this.productDto = null;
           return;
         }
+        this.productDto = dto;
         this.product = this.mapDtoToProductDetails(dto);
         this.initializeVariants();
         this.loadRelatedProducts(dto.category);
@@ -350,21 +355,14 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   }
 
   onAddToCart() {
-    if (this.product) {
-      console.log('Added to cart:', {
-        product: this.product,
-        variants: this.selectedVariants,
-        quantity: this.quantity
-      });
-      // Implement add to cart logic
+    if (this.productDto) {
+      this.cartService.addToCart(this.productDto, this.quantity);
     }
   }
 
   onAddToWishlist() {
-    if (this.product) {
-      console.log('Added to wishlist:', this.product);
-      // Implement add to wishlist logic
-    }
+    // Implement add to wishlist logic (if wishlist service exists)
+    // For now, this is a placeholder
   }
 
   onShare() {

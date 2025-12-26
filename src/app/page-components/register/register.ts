@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -15,10 +16,13 @@ export class RegisterComponent implements OnInit {
   isLoading = false;
   showPassword = false;
   showConfirmPassword = false;
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -146,15 +150,35 @@ export class RegisterComponent implements OnInit {
   onSubmit() {
     if (this.registerForm.valid) {
       this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
       
-      // Simulate API call
-      setTimeout(() => {
-        console.log('Registration form submitted:', this.registerForm.value);
-        this.isLoading = false;
-        
-        // Navigate to login page after successful registration
-        this.router.navigate(['/login']);
-      }, 2000);
+      const formValue = this.registerForm.value;
+      const registerData = {
+        name: `${formValue.firstName} ${formValue.lastName}`.trim(),
+        email: formValue.email,
+        password: formValue.password,
+        role: 'CUSTOMER'
+      };
+
+      this.authService.register(registerData).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          if (response.success) {
+            this.successMessage = response.message || 'Registration successful! Redirecting to login...';
+            // Navigate to login page after successful registration
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 2000);
+          } else {
+            this.errorMessage = response.message || 'Registration failed. Please try again.';
+          }
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'An error occurred during registration. Please try again.';
+        }
+      });
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.formControls).forEach(key => {

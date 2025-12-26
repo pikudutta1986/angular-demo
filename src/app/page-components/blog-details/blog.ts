@@ -79,26 +79,20 @@ export class BlogDetailsComponent implements OnInit {
       next: (res) => {
         this.isLoading = false;
         // Handle error response from API
-        if (res.error) {
-          console.error('Blog not found:', res.error);
-          this.errorMessage = res.error || 'Blog post not found';
+        if (res.error || !res.success || !res.data) {
+          this.errorMessage = res.error || res.message || 'Blog post not found';
           this.blogPost = null;
           return;
         }
         
-        const dto = res?.data as BlogPostDto | undefined;
-        if (!dto) {
-          this.errorMessage = 'Blog post not found';
-          this.blogPost = null;
-          return;
-        }
+        const dto = res.data;
         this.blogPost = this.mapDtoToPost(dto);
         this.loadRelatedPosts(dto.category);
       },
       error: (err) => {
         this.isLoading = false;
         console.error('Error loading blog post:', err);
-        this.errorMessage = err.error?.error || err.message || 'Failed to load blog post';
+        this.errorMessage = err.error?.error || err.error?.message || err.message || 'Failed to load blog post';
         this.blogPost = null;
       }
     });
@@ -134,7 +128,7 @@ export class BlogDetailsComponent implements OnInit {
 
   private loadRelatedPosts(category?: string) {
     // Load related posts from the same category
-    this.blogService.getBlogs({ category }).subscribe({
+    this.blogService.getBlogs(category).subscribe({
       next: (res) => {
         const items = res?.data || [];
         // Exclude current post and limit to 3 related posts

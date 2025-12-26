@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { ProductService, ProductDto } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
@@ -89,7 +90,8 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
-    private router: Router
+    private router: Router,
+    private cartService: CartService
   ) {}
 
   ngOnInit() {
@@ -557,13 +559,23 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   onAddToCart(product: Product) {
-    console.log('Added to cart:', product);
-    // Implement add to cart logic
+    const productDto: ProductDto = {
+      id: product.id,
+      name: product.name,
+      code: `PROD-${product.id}`,
+      category: product.category,
+      price: product.price,
+      specification: '',
+      description: product.description,
+      images: product.image,
+      created_at: product.createdAt || new Date().toISOString()
+    };
+    this.cartService.addToCart(productDto, 1);
   }
 
   onAddToWishlist(product: Product) {
-    console.log('Added to wishlist:', product);
-    // Implement add to wishlist logic
+    // Implement add to wishlist logic (if wishlist service exists)
+    // For now, this is a placeholder
   }
 
   getFloorRating(rating: number): number {

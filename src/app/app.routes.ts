@@ -14,6 +14,10 @@ import { AccountComponent } from './page-components/account/account';
 import { ForgotPasswordComponent } from './page-components/forgot-password/forgot-password';
 import { ResetPasswordComponent } from './page-components/reset-password/reset-password';
 
+// IMPORT GUARDS
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/auth.guard';
+
 export const routes: Routes = [
   // Home route
   { path: '', component: HomeComponent, title: 'Home' },
@@ -23,7 +27,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Login' },
   { path: 'register', component: RegisterComponent, title: 'Register' },
   { path: 'forgot-password', component: ForgotPasswordComponent, title: 'Forgot Password' },
-  { path: 'reset-password/:token', component: ResetPasswordComponent, title: 'Reset Password' },
+  { path: 'reset-password', component: ResetPasswordComponent, title: 'Reset Password' },
   
   // Product routes
   { path: 'products', component: ProductComponent, title: 'Products' },
@@ -33,12 +37,12 @@ export const routes: Routes = [
   { path: 'blog', component: BlogComponent, title: 'Blog' },
   { path: 'blog/:id', component: BlogDetailsComponent, title: 'Blog Details' },
   
-  // Shopping routes
-  { path: 'cart', component: CartComponent, title: 'Shopping Cart' },
-  { path: 'checkout', component: CheckoutComponent, title: 'Checkout' },
+  // Shopping routes (protected)
+  { path: 'cart', component: CartComponent, title: 'Shopping Cart', canActivate: [authGuard] },
+  { path: 'checkout', component: CheckoutComponent, title: 'Checkout', canActivate: [authGuard] },
   
-  // Account route
-  { path: 'account', component: AccountComponent, title: 'My Account' },
+  // Account route (protected)
+  { path: 'account', component: AccountComponent, title: 'My Account', canActivate: [authGuard] },
   
   // Wildcard route - must be last
   { path: '**', redirectTo: '' }

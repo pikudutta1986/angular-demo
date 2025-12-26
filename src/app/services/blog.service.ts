@@ -31,14 +31,18 @@ export class BlogService
 
   constructor(private http: HttpClient) { }
 
-  getBlogs(): Observable<BlogApiResponse>
+  getBlogs(category?: string): Observable<BlogApiResponse>
   {
-    return this.http.get<BlogApiResponse>(`${this.baseUrl}/blog`);
+    let params = new HttpParams();
+    if (category) {
+      params = params.set('category', category);
+    }
+    return this.http.get<BlogApiResponse>(`${this.baseUrl}/blog`, { params });
   }
 
-  getBlogById(id: string): Observable<{success: boolean; data: BlogPostDto; message?: string}>
+  getBlogById(id: string): Observable<{success: boolean; data: BlogPostDto; message?: string; error?: string}>
   {
-    return this.http.get<{success: boolean; data: BlogPostDto; message?: string}>(
+    return this.http.get<{success: boolean; data: BlogPostDto; message?: string; error?: string}>(
       `${this.baseUrl}/blog/${id}`
     );
   }

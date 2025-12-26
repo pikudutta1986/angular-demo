@@ -92,8 +92,13 @@ export class BlogComponent implements OnInit
         this.applyFilters();
         this.featuredPost = this.blogPosts.find(post => post.isFeatured) || this.blogPosts[0] || null;
       })
-    ).subscribe(()=>{
-      console.log(this.blogPosts);
+    ).subscribe({
+      next: () => {
+        // Blog posts loaded successfully
+      },
+      error: (err) => {
+        console.error('Error loading blog posts:', err);
+      }
     });
   }
 
