@@ -80,12 +80,16 @@ export class AuthService {
    * Login user and store token
    */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, credentials).pipe(
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, credentials).pipe(
       tap(response => {
         if (response.success && response.token) {
           this.setToken(response.token);
-          this.setUser(response.user);
-          this.currentUserSubject.next(response.user);
+          // Handle both 'user' and 'data' response formats
+          const user = response.data || response.user;
+          if (user) {
+            this.setUser(user);
+            this.currentUserSubject.next(user);
+          }
         }
       })
     );

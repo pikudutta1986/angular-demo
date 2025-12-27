@@ -1,0 +1,108 @@
+<div class="cart-container">
+  <div class="cart-header">
+    <h1>Shopping Cart</h1>
+    <p *ngIf="!isEmpty()" class="item-count">{{ totalItems }} {{ totalItems === 1 ? 'item' : 'items' }} in your cart</p>
+  </div>
+
+  <div *ngIf="isEmpty()" class="empty-cart">
+    <div class="empty-cart-icon">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="9" cy="21" r="1"></circle>
+        <circle cx="20" cy="21" r="1"></circle>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+      </svg>
+    </div>
+    <h2>Your cart is empty</h2>
+    <p>Looks like you haven't added any items to your cart yet.</p>
+    <a routerLink="/products" class="btn-primary">Continue Shopping</a>
+  </div>
+
+  <div *ngIf="!isEmpty()" class="cart-content">
+    <div class="cart-items">
+      <div class="cart-items-header">
+        <h2>Cart Items</h2>
+        <button *ngIf="cartItems.length > 0" class="btn-clear" (click)="clearCart()">Clear Cart</button>
+      </div>
+
+      <div class="cart-item-list">
+        <div *ngFor="let item of cartItems" class="cart-item">
+          <div class="item-image">
+            <img [src]="getProductImage(item.product)" [alt]="item.product.name" 
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
+          </div>
+
+          <div class="item-details">
+            <h3 class="item-name">
+              <a [routerLink]="['/product', item.product.id]">{{ item.product.name }}</a>
+            </h3>
+            <p class="item-category">{{ item.product.category }}</p>
+            <p class="item-code">Code: {{ item.product.code }}</p>
+            <div class="item-price">
+              <span class="price">{{ formatPrice(item.product.price) }}</span>
+            </div>
+          </div>
+
+          <div class="item-quantity">
+            <label>Quantity:</label>
+            <div class="quantity-controls">
+              <button type="button" class="qty-btn" (click)="updateQuantity(item, item.quantity - 1)">-</button>
+              <input type="number" 
+                     [value]="item.quantity" 
+                     (change)="updateQuantity(item, +$any($event.target).value)"
+                     min="1" 
+                     max="99"
+                     class="qty-input">
+              <button type="button" class="qty-btn" (click)="updateQuantity(item, item.quantity + 1)">+</button>
+            </div>
+          </div>
+
+          <div class="item-total">
+            <span class="total-label">Total:</span>
+            <span class="total-price">{{ formatPrice(item.total) }}</span>
+          </div>
+
+          <div class="item-actions">
+            <button class="btn-remove" (click)="removeItem(item.product.id)" title="Remove item">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <div class="summary-card">
+        <h2>Order Summary</h2>
+        
+        <div class="summary-row">
+          <span>Subtotal ({{ totalItems }} {{ totalItems === 1 ? 'item' : 'items' }}):</span>
+          <span class="summary-value">{{ formatPrice(totalPrice) }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Shipping:</span>
+          <span class="summary-value">Free</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Tax:</span>
+          <span class="summary-value">$0.00</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total-row">
+          <span>Total:</span>
+          <span class="summary-value total-price">{{ formatPrice(totalPrice) }}</span>
+        </div>
+
+        <a routerLink="/checkout" class="btn-checkout">Proceed to Checkout</a>
+        <a routerLink="/products" class="btn-continue">Continue Shopping</a>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -18,6 +18,12 @@ import { ResetPasswordComponent } from './page-components/reset-password/reset-p
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/auth.guard';
 
+// IMPORT ADMIN COMPONENTS
+import { AdminLayoutComponent } from './admin/admin-layout/admin-layout';
+import { AdminDashboardComponent } from './admin/dashboard/dashboard';
+import { AdminUsersComponent } from './admin/users/users';
+import { AdminOrdersComponent } from './admin/orders/orders';
+
 export const routes: Routes = [
   // Home route
   { path: '', component: HomeComponent, title: 'Home' },
@@ -43,6 +49,19 @@ export const routes: Routes = [
 
   // Account route (protected)
   { path: 'account', component: AccountComponent, title: 'My Account', canActivate: [authGuard] },
+
+  // Admin routes (protected with admin guard)
+  {
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [adminGuard],
+    children: [
+      { path: '', component: AdminDashboardComponent, title: 'Admin Dashboard' },
+      { path: 'users', component: AdminUsersComponent, title: 'User Management' },
+      { path: 'orders', component: AdminOrdersComponent, title: 'Order Management' },
+      // Add more admin routes here as needed
+    ]
+  },
 
   // Wildcard route - must be last
   { path: '**', redirectTo: '' }

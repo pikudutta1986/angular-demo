@@ -1,0 +1,143 @@
+.orders-container {
+    padding: 2rem;
+
+    .page-header {
+        margin-bottom: 2rem;
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+    }
+
+    .filters-bar {
+        margin-bottom: 1.5rem;
+
+        .status-filters {
+            display: flex;
+            gap: 0.5rem;
+
+            button {
+                padding: 0.5rem 1rem;
+                border: 1px solid #e2e8f0;
+                background: white;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                font-size: 0.875rem;
+
+                &.active {
+                    background: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+
+                &:hover {
+                    border-color: #667eea;
+                }
+            }
+        }
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        thead {
+            background: #f7fafc;
+
+            th {
+                padding: 1rem;
+                text-align: left;
+                font-weight: 600;
+                font-size: 0.875rem;
+                color: #4a5568;
+                text-transform: uppercase;
+            }
+        }
+
+        tbody {
+            tr {
+                border-top: 1px solid #e2e8f0;
+
+                &:hover {
+                    background: #f7fafc;
+                }
+
+                td {
+                    padding: 1rem;
+                    font-size: 0.875rem;
+                    color: #2d3748;
+                }
+            }
+        }
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: capitalize;
+
+        &.pending {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        &.paid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        &.shipped {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+    }
+
+    .status-select {
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+
+        &:hover {
+            border-color: #667eea;
+        }
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+
+        button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 0.25rem;
+            cursor: pointer;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            &:hover:not(:disabled) {
+                border-color: #667eea;
+            }
+        }
+    }
+}
+

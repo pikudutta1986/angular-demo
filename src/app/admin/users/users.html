@@ -1,0 +1,119 @@
+<div class="users-container">
+    <div class="page-header">
+        <h1>User Management</h1>
+    </div>
+
+    <div class="filters-bar">
+        <div class="search-box">
+            <input 
+                type="text" 
+                [(ngModel)]="searchTerm" 
+                placeholder="Search by name or email..."
+                (keyup.enter)="search()"
+            />
+            <button (click)="search()">Search</button>
+        </div>
+        <div class="role-filters">
+            <button 
+                [class.active]="roleFilter === ''" 
+                (click)="filterByRole('')"
+            >
+                All
+            </button>
+            <button 
+                [class.active]="roleFilter === 'ADMIN'" 
+                (click)="filterByRole('ADMIN')"
+            >
+                Admins
+            </button>
+            <button 
+                [class.active]="roleFilter === 'CUSTOMER'" 
+                (click)="filterByRole('CUSTOMER')"
+            >
+                Customers
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="loading">
+                    <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+                <tr *ngIf="!loading && users.length === 0">
+                    <td colspan="6" class="text-center">No users found</td>
+                </tr>
+                <tr *ngFor="let user of users">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="role-badge" [class]="user.role.toLowerCase()">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at | date:'short' }}</td>
+                    <td>
+                        <button class="btn-edit" (click)="editUser(user)">Edit</button>
+                        <button class="btn-delete" (click)="deleteUser(user)">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }} (Total: {{ total }})</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="updateUser()">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" [(ngModel)]="editForm.name" name="name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" [(ngModel)]="editForm.email" name="email" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select [(ngModel)]="editForm.role" name="role" required>
+                            <option value="ADMIN">Admin</option>
+                            <option value="CUSTOMER">Customer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (leave blank to keep current)</label>
+                        <input type="password" [(ngModel)]="editForm.password" name="password" />
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" (click)="closeModal()">Cancel</button>
+                        <button type="submit" [disabled]="loading">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

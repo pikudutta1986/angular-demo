@@ -1,0 +1,88 @@
+<div class="orders-container">
+    <div class="page-header">
+        <h1>Order Management</h1>
+    </div>
+
+    <div class="filters-bar">
+        <div class="status-filters">
+            <button 
+                [class.active]="statusFilter === ''" 
+                (click)="filterByStatus('')"
+            >
+                All
+            </button>
+            <button 
+                [class.active]="statusFilter === 'pending'" 
+                (click)="filterByStatus('pending')"
+            >
+                Pending
+            </button>
+            <button 
+                [class.active]="statusFilter === 'paid'" 
+                (click)="filterByStatus('paid')"
+            >
+                Paid
+            </button>
+            <button 
+                [class.active]="statusFilter === 'shipped'" 
+                (click)="filterByStatus('shipped')"
+            >
+                Shipped
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>User ID</th>
+                    <th>Products</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="loading">
+                    <td colspan="7" class="text-center">Loading...</td>
+                </tr>
+                <tr *ngIf="!loading && orders.length === 0">
+                    <td colspan="7" class="text-center">No orders found</td>
+                </tr>
+                <tr *ngFor="let order of orders">
+                    <td>#{{ order._id?.substring(0, 8) }}</td>
+                    <td>{{ order.user_id }}</td>
+                    <td>{{ getProductCount(order) }} item(s)</td>
+                    <td>{{ getOrderTotal(order) }}</td>
+                    <td>
+                        <span class="status-badge" [class]="order.status">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td>{{ formatDate(order.createdAt) }}</td>
+                    <td>
+                        <select 
+                            [value]="order.status" 
+                            (change)="updateStatus(order, $any($event.target).value)"
+                            class="status-select"
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="shipped">Shipped</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }} (Total: {{ total }})</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+</div>
+
