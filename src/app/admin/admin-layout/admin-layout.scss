@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Variables
 $sidebar-width: 260px;
 $sidebar-collapsed-width: 70px;
@@ -77,7 +79,7 @@ $bg-color: #f7fafc;
             .logo-icon {
                 width: 32px;
                 height: 32px;
-                background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%));
+                background: linear-gradient(135deg, $primary-color, color.adjust($primary-color, $lightness: -15%));
                 border-radius: 8px;
                 display: flex;
                 align-items: center;

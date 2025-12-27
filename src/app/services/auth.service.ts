@@ -35,7 +35,8 @@ export interface User {
 export interface LoginResponse {
   success: boolean;
   token: string;
-  user: User;
+  user?: User;
+  data?: User;  // Backend returns 'data' instead of 'user'
   message?: string;
 }
 
@@ -80,7 +81,7 @@ export class AuthService {
    * Login user and store token
    */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<any>(`${this.baseUrl}/auth/login`, credentials).pipe(
+    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, credentials).pipe(
       tap(response => {
         if (response.success && response.token) {
           this.setToken(response.token);
