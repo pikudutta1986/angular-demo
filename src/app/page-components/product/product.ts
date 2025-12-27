@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Router, RouterModule, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { ProductService, ProductDto } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { filter, takeUntil } from 'rxjs/operators';
@@ -46,14 +46,14 @@ export class ProductComponent implements OnInit, OnDestroy {
   title = 'Products';
   private destroy$ = new Subject<void>();
   private previousUrl = '';
-  
+
   // Product data
   products: Product[] = [];
   filteredProducts: Product[] = [];
   totalProducts: number = 0;
   totalPages: number = 0;
   allProductsCache: ProductDto[] = []; // Cache for total count calculation
-  
+
   // Filter options
   filters: FilterOptions = {
     categories: [],
@@ -64,11 +64,11 @@ export class ProductComponent implements OnInit, OnDestroy {
     isNew: false,
     isSale: false
   };
-  
+
   // Available filter values
   availableCategories: string[] = [];
   availableBrands: string[] = [];
-  
+
   // UI state
   sortBy: string = 'name';
   viewMode: 'grid' | 'list' = 'grid';
@@ -77,7 +77,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   itemsPerPage: number = 12;
   isLoading: boolean = false;
   errorMessage: string | null = null;
-  
+
   // Sort options
   sortOptions = [
     { value: 'name', label: 'Name A-Z' },
@@ -90,9 +90,11 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
+    private route: ActivatedRoute,
     private router: Router,
-    private cartService: CartService
-  ) {}
+    private cartService: CartService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
     // Load paginated products immediately
@@ -108,7 +110,7 @@ export class ProductComponent implements OnInit, OnDestroy {
       )
       .subscribe((event: NavigationEnd) => {
         const currentUrl = event.urlAfterRedirects || event.url;
-        
+
         // Only reload if we're navigating TO /products from a different route
         if ((currentUrl === '/products' || currentUrl.startsWith('/products')) && this.previousUrl !== currentUrl) {
           // Reset to first page when navigating to products page
@@ -116,17 +118,17 @@ export class ProductComponent implements OnInit, OnDestroy {
           // Reset filters if navigating from another page (without query params)
           if (!currentUrl.startsWith('/products?')) {
             // Reset filters without calling loadProducts (we'll call it after)
-            const priceRange = this.allProductsCache.length > 0 
+            const priceRange = this.allProductsCache.length > 0
               ? (() => {
-                  const allMapped = this.allProductsCache.map(item => this.mapDtoToProduct(item));
-                  const prices = allMapped.map(p => p.price);
-                  return { 
-                    min: Math.floor(Math.min(...prices)), 
-                    max: Math.ceil(Math.max(...prices)) 
-                  };
-                })()
+                const allMapped = this.allProductsCache.map(item => this.mapDtoToProduct(item));
+                const prices = allMapped.map(p => p.price);
+                return {
+                  min: Math.floor(Math.min(...prices)),
+                  max: Math.ceil(Math.max(...prices))
+                };
+              })()
               : { min: 0, max: 0 };
-            
+
             this.filters = {
               categories: [],
               brands: [],
@@ -139,7 +141,7 @@ export class ProductComponent implements OnInit, OnDestroy {
           }
           this.loadProducts();
         }
-        
+
         // Update previous URL
         this.previousUrl = currentUrl;
       });
@@ -153,15 +155,15 @@ export class ProductComponent implements OnInit, OnDestroy {
   private mapDtoToProduct(dto: ProductDto): Product {
     // Extract first image from pipe-separated string
     const imageUrl = dto.images?.split('|')[0]?.trim() || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
-    
+
     // Extract tags from specification or use empty array
     const tags = dto.specification ? dto.specification.split('|').map(s => s.trim()) : [];
-    
+
     // Calculate if product is new (created within last 30 days)
     const createdAt = new Date(dto.created_at);
     const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
     const isNew = daysSinceCreation <= 30;
-    
+
     // Default values for missing fields
     return {
       id: dto.id,
@@ -185,7 +187,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   public loadProducts() {
     this.isLoading = true;
     this.errorMessage = null;
-    
+
     // Build API parameters
     const apiParams: any = {
       page: this.currentPage,
@@ -209,12 +211,12 @@ export class ProductComponent implements OnInit, OnDestroy {
     if (this.sortBy) {
       apiParams.sort = this.sortBy;
     }
-    
+
     this.productService.getProducts(apiParams).subscribe({
       next: (res) => {
         this.isLoading = false;
         const items = res?.data || [];
-        
+
         // Validate response
         if (!res.success) {
           this.errorMessage = res.message || 'Failed to load products';
@@ -222,10 +224,10 @@ export class ProductComponent implements OnInit, OnDestroy {
           this.filteredProducts = [];
           return;
         }
-        
+
         this.products = items.map(item => this.mapDtoToProduct(item));
         this.filteredProducts = [...this.products];
-        
+
         // Use server-side pagination if available
         if (res.total !== undefined) {
           this.totalProducts = res.total;
@@ -245,7 +247,7 @@ export class ProductComponent implements OnInit, OnDestroy {
             this.totalProducts = this.totalPages * this.itemsPerPage;
           }
         }
-        
+
         this.initializeFilters();
         // Apply client-side filters only if any are active
         if (this.hasActiveClientSideFilters()) {
@@ -254,11 +256,12 @@ export class ProductComponent implements OnInit, OnDestroy {
           // No client-side filters, use products as-is from server
           this.filteredProducts = [...this.products];
         }
+        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
       },
       error: (err) => {
         this.isLoading = false;
         console.error('Error loading products:', err);
-        
+
         // Handle different error types
         if (err.status === 404) {
           this.errorMessage = 'No products found';
@@ -271,11 +274,12 @@ export class ProductComponent implements OnInit, OnDestroy {
         } else {
           this.errorMessage = err.error?.message || err.message || 'Failed to load products';
         }
-        
+
         this.products = [];
         this.filteredProducts = [];
         this.totalProducts = 0;
         this.totalPages = 0;
+        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
       }
     });
   }
@@ -291,7 +295,7 @@ export class ProductComponent implements OnInit, OnDestroy {
 
     // Price range filter
     if (this.filters.priceRange.min > 0 || this.filters.priceRange.max > 0) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.price >= this.filters.priceRange.min && p.price <= this.filters.priceRange.max
       );
     }
@@ -306,10 +310,10 @@ export class ProductComponent implements OnInit, OnDestroy {
       next: (res) => {
         const allItems = res?.data || [];
         this.allProductsCache = allItems;
-        
+
         // Initialize filters from all products
         this.initializeFiltersFromAllProducts(allItems);
-        
+
         // Recalculate total based on current filters
         if (this.filters.categories.length > 0 || this.filters.priceRange.min > 0 || this.filters.priceRange.max > 0) {
           this.calculateTotalFromCache();
@@ -337,15 +341,15 @@ export class ProductComponent implements OnInit, OnDestroy {
     const allMapped = allProducts.map(item => this.mapDtoToProduct(item));
     this.availableCategories = [...new Set(allMapped.map(p => p.category))];
     this.availableBrands = [...new Set(allMapped.map(p => p.brand))];
-    
+
     if (allMapped.length > 0) {
       const prices = allMapped.map(p => p.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
       if (this.filters.priceRange.min === 0 && this.filters.priceRange.max === 0) {
-        this.filters.priceRange = { 
-          min: Math.floor(minPrice), 
-          max: Math.ceil(maxPrice) 
+        this.filters.priceRange = {
+          min: Math.floor(minPrice),
+          max: Math.ceil(maxPrice)
         };
       }
     }
@@ -355,15 +359,15 @@ export class ProductComponent implements OnInit, OnDestroy {
     // Extract categories and brands from current page products
     this.availableCategories = [...new Set(this.products.map(p => p.category))];
     this.availableBrands = [...new Set(this.products.map(p => p.brand))];
-    
+
     // Set price range based on actual products if not already set
     if (this.products.length > 0 && (this.filters.priceRange.min === 0 && this.filters.priceRange.max === 0)) {
       const prices = this.products.map(p => p.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      this.filters.priceRange = { 
-        min: Math.floor(minPrice), 
-        max: Math.ceil(maxPrice) 
+      this.filters.priceRange = {
+        min: Math.floor(minPrice),
+        max: Math.ceil(maxPrice)
       };
     }
   }
@@ -431,14 +435,14 @@ export class ProductComponent implements OnInit, OnDestroy {
       const prices = allMapped.map(p => p.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      this.filters.priceRange = { 
-        min: Math.floor(minPrice), 
-        max: Math.ceil(maxPrice) 
+      this.filters.priceRange = {
+        min: Math.floor(minPrice),
+        max: Math.ceil(maxPrice)
       };
     } else {
       this.filters.priceRange = { min: 0, max: 0 };
     }
-    
+
     this.filters = {
       categories: [],
       brands: [],
@@ -455,10 +459,10 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   private hasActiveClientSideFilters(): boolean {
     return this.filters.brands.length > 0 ||
-           this.filters.ratings.length > 0 ||
-           this.filters.inStock ||
-           this.filters.isNew ||
-           this.filters.isSale;
+      this.filters.ratings.length > 0 ||
+      this.filters.inStock ||
+      this.filters.isNew ||
+      this.filters.isSale;
   }
 
   private applyClientSideFilters() {
@@ -472,7 +476,7 @@ export class ProductComponent implements OnInit, OnDestroy {
 
     // Rating filter (client-side)
     if (this.filters.ratings.length > 0) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         this.filters.ratings.some(rating => p.rating >= rating)
       );
     }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ProductDto } from './product.service';
+import { ToastService } from './toast.service';
 
 export interface CartItem {
   product: ProductDto;
@@ -13,7 +14,7 @@ export class CartService {
   private cartItemsSubject = new BehaviorSubject<CartItem[]>(this.getCartFromStorage());
   public cartItems$ = this.cartItemsSubject.asObservable();
 
-  constructor() {
+  constructor(private toastService: ToastService) {
     // Load cart from storage on initialization
     this.loadCartFromStorage();
   }
@@ -42,7 +43,7 @@ export class CartService {
     if (existingItemIndex > -1) {
       // Update quantity if item already exists
       currentItems[existingItemIndex].quantity += quantity;
-      currentItems[existingItemIndex].total = 
+      currentItems[existingItemIndex].total =
         currentItems[existingItemIndex].quantity * product.price;
     } else {
       // Add new item
@@ -53,7 +54,11 @@ export class CartService {
       });
     }
 
-    this.updateCart(currentItems);
+    this.cartItemsSubject.next(currentItems);
+    this.saveCartToStorage(currentItems);
+
+    // Show success toast notification
+    this.toastService.success(`${product.name} added to cart!`, 3000);
   }
 
   /**

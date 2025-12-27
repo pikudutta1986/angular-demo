@@ -1,20 +1,86 @@
 <header class="header">
   <nav class="navbar">
     <div class="nav-brand">
-      <a routerLink="/home" class="brand-link">{{ title }}</a>
+      <a routerLink="/home" class="brand-link">
+        <span class="brand-icon">🛍️</span>
+        <span class="brand-text">{{ title }}</span>
+      </a>
     </div>
     
-    <div class="nav-menu">
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" (click)="toggleMenu()" [class.active]="isMenuOpen">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    
+    <!-- Navigation Menu -->
+    <div class="nav-menu" [class.active]="isMenuOpen">
       <ul class="nav-list">
         <li class="nav-item" *ngFor="let item of navItems">
-          <a [routerLink]="item.path" class="nav-link">{{ item.label }}</a>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-link" (click)="isMenuOpen = false">
+            {{ item.label }}
+          </a>
         </li>
       </ul>
     </div>
     
+    <!-- Nav Actions -->
     <div class="nav-actions">
-      <a routerLink="/cart" class="nav-link cart-link">Cart</a>
-      <a routerLink="/login" class="nav-link login-link">Login</a>
+      <!-- Cart Icon with Badge -->
+      <button class="action-btn cart-btn" (click)="navigateToCart()" title="Shopping Cart">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="cart-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+      </button>
+      
+      <!-- Auth Actions -->
+      <div class="auth-section" *ngIf="!isAuthenticated">
+        <a routerLink="/login" class="btn btn-outline">Login</a>
+        <a routerLink="/register" class="btn btn-primary">Sign Up</a>
+      </div>
+      
+      <!-- User Menu -->
+      <div class="user-menu" *ngIf="isAuthenticated">
+        <button class="user-avatar" (click)="toggleUserMenu()" [class.active]="isUserMenuOpen">
+          <span class="avatar-text">{{ getUserInitials() }}</span>
+        </button>
+        
+        <div class="user-dropdown" *ngIf="isUserMenuOpen">
+          <div class="user-info">
+            <div class="user-name">{{ currentUser?.name }}</div>
+            <div class="user-email">{{ currentUser?.email }}</div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a routerLink="/account" class="dropdown-item" (click)="isUserMenuOpen = false">
+            <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            My Account
+          </a>
+          <a routerLink="/cart" class="dropdown-item" (click)="isUserMenuOpen = false">
+            <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            My Cart
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item logout-btn" (click)="logout()">
+            <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 </header>

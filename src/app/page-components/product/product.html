@@ -5,7 +5,7 @@
       <h1 class="page-title">{{ title }}</h1>
       <p class="page-subtitle">Discover amazing products at great prices</p>
     </div>
-    
+
     <!-- Mobile Filter Toggle -->
     <button class="mobile-filter-toggle" (click)="toggleFilters()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -28,11 +28,8 @@
         <h4 class="filter-title">Categories</h4>
         <div class="filter-options">
           <label *ngFor="let category of availableCategories" class="filter-option">
-            <input
-              type="checkbox"
-              [checked]="filters.categories.includes(category)"
-              (change)="onCategoryChange(category, $event.target.checked)"
-            />
+            <input type="checkbox" [checked]="filters.categories.includes(category)"
+              (change)="onCategoryChange(category, $event.target.checked)" />
             <span class="checkmark"></span>
             <span class="option-label">{{ category }}</span>
             <span class="option-count">{{ getCategoryCount(category) }}</span>
@@ -45,11 +42,8 @@
         <h4 class="filter-title">Brands</h4>
         <div class="filter-options">
           <label *ngFor="let brand of availableBrands" class="filter-option">
-            <input
-              type="checkbox"
-              [checked]="filters.brands.includes(brand)"
-              (change)="onBrandChange(brand, $event.target.checked)"
-            />
+            <input type="checkbox" [checked]="filters.brands.includes(brand)"
+              (change)="onBrandChange(brand, $event.target.checked)" />
             <span class="checkmark"></span>
             <span class="option-label">{{ brand }}</span>
             <span class="option-count">{{ getBrandCount(brand) }}</span>
@@ -61,25 +55,16 @@
       <div class="filter-section">
         <h4 class="filter-title">Price Range</h4>
         <div class="price-range">
-          <div class="price-inputs">
-            <input
-              type="number"
-              [(ngModel)]="filters.priceRange.min"
-              (ngModelChange)="onPriceRangeChange()"
-              placeholder="Min"
-              class="price-input"
-            />
-            <span class="price-separator">-</span>
-            <input
-              type="number"
-              [(ngModel)]="filters.priceRange.max"
-              (ngModelChange)="onPriceRangeChange()"
-              placeholder="Max"
-              class="price-input"
-            />
+          <div class="price-slider">
+            <input type="range" [(ngModel)]="filters.priceRange.min" [min]="0" [max]="filters.priceRange.max"
+              (ngModelChange)="onPriceRangeChange()" class="slider slider-min" />
+            <input type="range" [(ngModel)]="filters.priceRange.max" [min]="filters.priceRange.min" [max]="10000"
+              (ngModelChange)="onPriceRangeChange()" class="slider slider-max" />
           </div>
           <div class="price-display">
-            ${{ filters.priceRange.min }} - ${{ filters.priceRange.max }}
+            <span class="price-value">${{ filters.priceRange.min }}</span>
+            <span class="price-separator">-</span>
+            <span class="price-value">${{ filters.priceRange.max }}</span>
           </div>
         </div>
       </div>
@@ -89,17 +74,12 @@
         <h4 class="filter-title">Customer Rating</h4>
         <div class="filter-options">
           <label *ngFor="let rating of [5, 4, 3, 2, 1]" class="filter-option">
-            <input
-              type="checkbox"
-              [checked]="filters.ratings.includes(rating)"
-              (change)="onRatingChange(rating, $event.target.checked)"
-            />
+            <input type="checkbox" [checked]="filters.ratings.includes(rating)"
+              (change)="onRatingChange(rating, $event.target.checked)" />
             <span class="checkmark"></span>
             <div class="rating-display">
               <div class="stars">
-                <span *ngFor="let star of [1,2,3,4,5]" 
-                      class="star" 
-                      [class.filled]="star <= rating">★</span>
+                <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= rating">★</span>
               </div>
               <span class="rating-text">& Up</span>
             </div>
@@ -112,31 +92,19 @@
         <h4 class="filter-title">Quick Filters</h4>
         <div class="quick-filters">
           <label class="quick-filter">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.inStock"
-              (ngModelChange)="onFilterToggle('inStock')"
-            />
+            <input type="checkbox" [(ngModel)]="filters.inStock" (ngModelChange)="onFilterToggle('inStock')" />
             <span class="checkmark"></span>
             <span class="option-label">In Stock Only</span>
           </label>
-          
+
           <label class="quick-filter">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.isNew"
-              (ngModelChange)="onFilterToggle('isNew')"
-            />
+            <input type="checkbox" [(ngModel)]="filters.isNew" (ngModelChange)="onFilterToggle('isNew')" />
             <span class="checkmark"></span>
             <span class="option-label">New Arrivals</span>
           </label>
-          
+
           <label class="quick-filter">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.isSale"
-              (ngModelChange)="onFilterToggle('isSale')"
-            />
+            <input type="checkbox" [(ngModel)]="filters.isSale" (ngModelChange)="onFilterToggle('isSale')" />
             <span class="checkmark"></span>
             <span class="option-label">On Sale</span>
           </label>
@@ -150,13 +118,14 @@
       <div class="toolbar">
         <div class="results-info">
           <span class="results-count" *ngIf="!isLoading">
-            Showing {{ getPagedProducts().length }} of {{ totalProducts > 0 ? totalProducts : filteredProducts.length }} products
+            Showing {{ getPagedProducts().length }} of {{ totalProducts > 0 ? totalProducts : filteredProducts.length }}
+            products
           </span>
           <span class="results-count" *ngIf="isLoading">
             Loading products...
           </span>
         </div>
-        
+
         <div class="toolbar-controls">
           <!-- Sort Dropdown -->
           <div class="sort-control">
@@ -170,12 +139,8 @@
 
           <!-- View Mode Toggle -->
           <div class="view-controls">
-            <button 
-              class="view-btn" 
-              [class.active]="viewMode === 'grid'"
-              (click)="onViewModeChange('grid')"
-              title="Grid View"
-            >
+            <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="onViewModeChange('grid')"
+              title="Grid View">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7"></rect>
                 <rect x="14" y="3" width="7" height="7"></rect>
@@ -183,12 +148,8 @@
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
             </button>
-            <button 
-              class="view-btn" 
-              [class.active]="viewMode === 'list'"
-              (click)="onViewModeChange('list')"
-              title="List View"
-            >
+            <button class="view-btn" [class.active]="viewMode === 'list'" (click)="onViewModeChange('list')"
+              title="List View">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="8" y1="6" x2="21" y2="6"></line>
                 <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -227,12 +188,14 @@
       </div>
 
       <!-- Products Grid/List -->
-      <div *ngIf="!isLoading && !errorMessage" class="products-container" [class.grid-view]="viewMode === 'grid'" [class.list-view]="viewMode === 'list'">
+      <div *ngIf="!isLoading && !errorMessage" class="products-container" [class.grid-view]="viewMode === 'grid'"
+        [class.list-view]="viewMode === 'list'">
         <div *ngFor="let product of getPagedProducts()" class="product-card" [routerLink]="['/product', product.id]">
           <!-- Product Image -->
           <div class="product-image">
-            <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="$event.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
-            
+            <img [src]="product.image" [alt]="product.name" loading="lazy"
+              (error)="$event.target.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
+
             <!-- Badges -->
             <div class="product-badges">
               <span *ngIf="product.isNew" class="badge new">New</span>
@@ -242,19 +205,15 @@
 
             <!-- Quick Actions -->
             <div class="product-actions">
-              <button 
-                class="action-btn wishlist" 
-                (click)="onAddToWishlist(product); $event.stopPropagation()"
-                title="Add to Wishlist"
-              >
+              <button class="action-btn wishlist" (click)="onAddToWishlist(product); $event.stopPropagation()"
+                title="Add to Wishlist">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                  </path>
                 </svg>
               </button>
-              <button 
-                class="action-btn quick-view" 
-                title="Quick View"
-              >
+              <button class="action-btn quick-view" title="Quick View">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
@@ -273,13 +232,12 @@
             <div class="product-category">{{ product.category }}</div>
             <h3 class="product-name">{{ product.name }}</h3>
             <div class="product-brand">{{ product.brand }}</div>
-            
+
             <!-- Rating -->
             <div class="product-rating">
               <div class="stars">
-                <span *ngFor="let star of [1,2,3,4,5]" 
-                      class="star" 
-                      [class.filled]="star <= getFloorRating(product.rating)">★</span>
+                <span *ngFor="let star of [1,2,3,4,5]" class="star"
+                  [class.filled]="star <= getFloorRating(product.rating)">★</span>
               </div>
               <span class="rating-text">({{ product.reviewCount }})</span>
             </div>
@@ -291,11 +249,8 @@
             </div>
 
             <!-- Add to Cart Button -->
-            <button 
-              class="add-to-cart-btn" 
-              [disabled]="!product.inStock"
-              (click)="onAddToCart(product); $event.stopPropagation()"
-            >
+            <button class="add-to-cart-btn" [disabled]="!product.inStock"
+              (click)="onAddToCart(product); $event.stopPropagation()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
@@ -322,30 +277,18 @@
 
       <!-- Pagination -->
       <div *ngIf="!isLoading && !errorMessage && getTotalPages() > 1" class="pagination">
-        <button 
-          class="page-btn" 
-          [disabled]="currentPage === 1"
-          (click)="onPageChange(currentPage - 1)"
-        >
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
           Previous
         </button>
-        
+
         <div class="page-numbers">
-          <button 
-            *ngFor="let page of getPageNumbers()" 
-            class="page-number"
-            [class.active]="currentPage === page"
-            (click)="onPageChange(page)"
-          >
+          <button *ngFor="let page of getPageNumbers()" class="page-number" [class.active]="currentPage === page"
+            (click)="onPageChange(page)">
             {{ page }}
           </button>
         </div>
-        
-        <button 
-          class="page-btn" 
-          [disabled]="currentPage === getTotalPages()"
-          (click)="onPageChange(currentPage + 1)"
-        >
+
+        <button class="page-btn" [disabled]="currentPage === getTotalPages()" (click)="onPageChange(currentPage + 1)">
           Next
         </button>
       </div>

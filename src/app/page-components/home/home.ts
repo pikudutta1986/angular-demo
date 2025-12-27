@@ -1,6 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { ProductService, ProductDto } from '../../services/product.service';
+import { BlogService, BlogPostDto } from '../../services/blog.service';
+import { Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 
 interface FeaturedProduct {
   id: number;
@@ -63,141 +67,170 @@ interface Statistic {
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   title = 'Home';
-  
+  private destroy$ = new Subject<void>();
+  private previousUrl = '';
+
   // Hero section
   heroTitle = 'Discover Amazing Products';
   heroSubtitle = 'Shop the latest trends and find everything you need in one place';
   heroButtonText = 'Shop Now';
   heroImage = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200';
-  
+
   // Featured products
   featuredProducts: FeaturedProduct[] = [];
-  
+
   // Latest blog posts
   latestPosts: BlogPost[] = [];
-  
+
   // Testimonials
   testimonials: Testimonial[] = [];
-  
+
   // Features
   features: Feature[] = [];
-  
+
   // Statistics
   statistics: Statistic[] = [];
-  
+
   // UI state
   currentTestimonial = 0;
   isTestimonialAutoPlay = true;
+  isLoadingProducts = true;
+  isLoadingBlogs = true;
+  errorMessage: string | null = null;
 
-  constructor() {}
+  constructor(
+    private productService: ProductService,
+    private blogService: BlogService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
-    this.initializeData();
+    console.log('[HOME] Component initialized - ngOnInit called');
+    // Load data immediately on component init
+    this.loadFeaturedProducts();
+    this.loadLatestBlogs();
+    this.initializeStaticData();
     this.startTestimonialAutoPlay();
+
+    // Listen to router navigation events to reload when navigating to home
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationEnd) => {
+        const currentUrl = event.urlAfterRedirects || event.url;
+        console.log('[HOME] Navigation detected:', currentUrl, 'Previous:', this.previousUrl);
+
+        // Reload if we're navigating TO home from a different route
+        if ((currentUrl === '/' || currentUrl === '/home') && this.previousUrl && this.previousUrl !== currentUrl) {
+          console.log('[HOME] Reloading data after navigation to home');
+          this.loadFeaturedProducts();
+          this.loadLatestBlogs();
+        }
+
+        // Update previous URL
+        this.previousUrl = currentUrl;
+      });
   }
 
-  private initializeData() {
-    // Featured Products
-    this.featuredProducts = [
-      {
-        id: 1,
-        name: 'Wireless Bluetooth Headphones',
-        price: 99.99,
-        originalPrice: 149.99,
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
-        category: 'Electronics',
-        rating: 4.5,
-        reviewCount: 128,
-        isNew: false,
-        isSale: true,
-        slug: 'wireless-bluetooth-headphones'
-      },
-      {
-        id: 2,
-        name: 'Smart Fitness Watch',
-        price: 199.99,
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
-        category: 'Electronics',
-        rating: 4.8,
-        reviewCount: 256,
-        isNew: true,
-        isSale: false,
-        slug: 'smart-fitness-watch'
-      },
-      {
-        id: 3,
-        name: 'Professional Camera Lens',
-        price: 599.99,
-        originalPrice: 799.99,
-        image: 'https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400',
-        category: 'Electronics',
-        rating: 4.9,
-        reviewCount: 67,
-        isNew: false,
-        isSale: true,
-        slug: 'professional-camera-lens'
-      },
-      {
-        id: 4,
-        name: 'Gaming Mechanical Keyboard',
-        price: 129.99,
-        image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400',
-        category: 'Electronics',
-        rating: 4.8,
-        reviewCount: 187,
-        isNew: true,
-        isSale: false,
-        slug: 'gaming-mechanical-keyboard'
-      }
-    ];
+  ngOnDestroy() {
+    console.log('[HOME] Component destroyed - ngOnDestroy called');
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    // Latest Blog Posts
-    this.latestPosts = [
-      {
-        id: 1,
-        title: 'The Future of Web Development: Trends to Watch in 2024',
-        excerpt: 'Explore the latest trends in web development including AI integration, WebAssembly, and modern frameworks.',
-        author: {
-          name: 'Sarah Johnson',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100'
-        },
-        category: 'Web Development',
-        featuredImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400',
-        publishDate: '2024-01-15',
-        readTime: 8,
-        slug: 'future-web-development-trends-2024'
+  private loadFeaturedProducts() {
+    console.log('[HOME] loadFeaturedProducts() called');
+    this.isLoadingProducts = true;
+    this.productService.getProducts({ pageSize: 8, sort: 'newest' }).subscribe({
+      next: (response) => {
+        console.log('[HOME] API Response received:', response);
+        if (response.success && response.data) {
+          console.log('[HOME] Products count:', response.data.length);
+          // Ensure we only show exactly 8 products, even if API returns more
+          this.featuredProducts = response.data.slice(0, 8).map(product => this.mapProductDtoToFeatured(product));
+          console.log('[HOME] Featured products set:', this.featuredProducts.length);
+          // Manually trigger change detection for zoneless/SSR mode
+          this.cdr.detectChanges();
+          console.log('[HOME] Change detection triggered');
+        } else {
+          console.warn('[HOME] API response not successful or no data:', response);
+        }
+        this.isLoadingProducts = false;
       },
-      {
-        id: 2,
-        title: 'Getting Started with Angular 17: A Complete Guide',
-        excerpt: 'Learn the fundamentals of Angular 17 with this comprehensive guide covering components, services, and routing.',
-        author: {
-          name: 'Mike Chen',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
-        },
-        category: 'Angular',
-        featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-        publishDate: '2024-01-12',
-        readTime: 12,
-        slug: 'getting-started-angular-17-complete-guide'
-      },
-      {
-        id: 3,
-        title: 'Building Scalable React Applications: Best Practices',
-        excerpt: 'Discover essential patterns and practices for building large-scale React applications that are maintainable.',
-        author: {
-          name: 'David Kim',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'
-        },
-        category: 'React',
-        featuredImage: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400',
-        publishDate: '2024-01-08',
-        readTime: 10,
-        slug: 'building-scalable-react-applications-best-practices'
+      error: (error) => {
+        console.error('[HOME] Error loading featured products:', error);
+        this.errorMessage = 'Failed to load featured products';
+        this.isLoadingProducts = false;
+        // Fallback to empty array instead of showing error to user
+        this.featuredProducts = [];
       }
-    ];
+    });
+  }
+
+  private loadLatestBlogs() {
+    this.isLoadingBlogs = true;
+    this.blogService.getBlogs().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Take only first 3 blog posts
+          this.latestPosts = response.data.slice(0, 3).map(blog => this.mapBlogDtoToPost(blog));
+        }
+        this.isLoadingBlogs = false;
+      },
+      error: (error) => {
+        console.error('Error loading blog posts:', error);
+        this.isLoadingBlogs = false;
+        // Fallback to empty array
+        this.latestPosts = [];
+      }
+    });
+  }
+
+  private mapProductDtoToFeatured(dto: ProductDto): FeaturedProduct {
+    const imageUrl = dto.images?.split('|')[0]?.trim() || 'https://via.placeholder.com/400';
+    const createdAt = new Date(dto.created_at);
+    const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+
+    return {
+      id: dto.id,
+      name: dto.name,
+      price: dto.price,
+      originalPrice: undefined,
+      image: imageUrl,
+      category: dto.category,
+      rating: 4.5,
+      reviewCount: Math.floor(Math.random() * 200) + 50,
+      isNew: daysSinceCreation <= 30,
+      isSale: false,
+      slug: dto.name.toLowerCase().replace(/\s+/g, '-')
+    };
+  }
+
+  private mapBlogDtoToPost(dto: BlogPostDto): BlogPost {
+    return {
+      id: Math.floor(Math.random() * 1000),
+      title: dto.title,
+      excerpt: dto.content?.slice(0, 150) + '...' || '',
+      author: {
+        name: 'Admin',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
+      },
+      category: dto.category || 'General',
+      featuredImage: dto.image_url || 'https://via.placeholder.com/400',
+      publishDate: dto.createdAt || new Date().toISOString(),
+      readTime: Math.ceil(dto.content?.length / 1000) || 5,
+      slug: dto.slug
+    };
+  }
+
+  private initializeStaticData() {
+
+
 
     // Testimonials
     this.testimonials = [
@@ -304,8 +337,8 @@ export class HomeComponent implements OnInit {
   }
 
   previousTestimonial() {
-    this.currentTestimonial = this.currentTestimonial === 0 
-      ? this.testimonials.length - 1 
+    this.currentTestimonial = this.currentTestimonial === 0
+      ? this.testimonials.length - 1
       : this.currentTestimonial - 1;
   }
 
@@ -323,10 +356,10 @@ export class HomeComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   }
 

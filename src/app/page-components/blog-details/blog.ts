@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BlogService, BlogPostDto } from '../../services/blog.service';
@@ -58,8 +58,9 @@ export class BlogDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private blogService: BlogService
-  ) {}
+    private blogService: BlogService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -74,7 +75,7 @@ export class BlogDetailsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = null;
     this.blogPost = null;
-    
+
     this.blogService.getBlogById(id).subscribe({
       next: (res) => {
         this.isLoading = false;
@@ -84,10 +85,11 @@ export class BlogDetailsComponent implements OnInit {
           this.blogPost = null;
           return;
         }
-        
+
         const dto = res.data;
         this.blogPost = this.mapDtoToPost(dto);
         this.loadRelatedPosts(dto.category);
+        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
       },
       error: (err) => {
         this.isLoading = false;
@@ -102,7 +104,7 @@ export class BlogDetailsComponent implements OnInit {
     // Calculate reading time (average 200 words per minute)
     const wordCount = dto.content?.split(/\s+/).length || 0;
     const readTime = Math.max(1, Math.ceil(wordCount / 200));
-    
+
     return {
       id: 0,
       title: dto.title || '',
@@ -182,10 +184,10 @@ export class BlogDetailsComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   }
 

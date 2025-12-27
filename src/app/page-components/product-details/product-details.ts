@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -80,8 +80,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private cartService: CartService
-  ) {}
+    private cartService: CartService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
     // Load product immediately from route snapshot (for initial load)
@@ -151,11 +152,12 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         this.product = this.mapDtoToProductDetails(dto);
         this.initializeVariants();
         this.loadRelatedProducts(dto.category);
+        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
       },
       error: (err) => {
         this.isLoading = false;
         console.error('Error loading product:', err);
-        
+
         // Handle different error types
         if (err.status === 404) {
           this.errorMessage = 'Product not found';
@@ -320,7 +322,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   getVariantGroups() {
     if (!this.product) return {};
-    
+
     return this.product.variants.reduce((acc, variant) => {
       if (!acc[variant.name]) {
         acc[variant.name] = [];

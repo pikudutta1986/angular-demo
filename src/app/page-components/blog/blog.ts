@@ -1,12 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {RouterModule} from '@angular/router';
-import {FormsModule} from '@angular/forms';
-import {BlogService, BlogPostDto} from '../../services/blog.service';
-import {tap} from 'rxjs/operators';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { BlogService, BlogPostDto } from '../../services/blog.service';
+import { tap, filter, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
-interface BlogPost
-{
+interface BlogPost {
   title: string;
   slug: string;
   excerpt: string;
@@ -17,15 +17,13 @@ interface BlogPost
   isFeatured: boolean;
 }
 
-interface BlogCategory
-{
+interface BlogCategory {
   name: string;
   count: number;
   slug: string;
 }
 
-interface BlogTag
-{
+interface BlogTag {
   name: string;
   count: number;
   slug: string;
@@ -39,10 +37,11 @@ interface BlogTag
   styleUrl: './blog.scss'
 })
 
-export class BlogComponent implements OnInit
-{
+export class BlogComponent implements OnInit, OnDestroy {
   // page title
   title = 'Blog';
+  private destroy$ = new Subject<void>();
+  private previousUrl = '';
 
   // Blog data
   blogPosts: BlogPost[] = [];
@@ -67,23 +66,44 @@ export class BlogComponent implements OnInit
 
   // Sort options
   sortOptions = [
-    {value: 'newest', label: 'Newest First'},
-    {value: 'oldest', label: 'Oldest First'},
-    {value: 'popular', label: 'Most Popular'},
-    {value: 'trending', label: 'Trending'}
+    { value: 'newest', label: 'Newest First' },
+    { value: 'oldest', label: 'Oldest First' },
+    { value: 'popular', label: 'Most Popular' },
+    { value: 'trending', label: 'Trending' }
   ];
 
-  constructor(private blogService: BlogService) { }
+  constructor(private blogService: BlogService, private router: Router, private cdr: ChangeDetectorRef) { }
 
-  ngOnInit() 
-  {
-    // Load blogs
+  ngOnInit() {
+    // Load blogs immediately
     this.loadBlogs();
+
+    // Listen to router navigation events to reload when navigating to this route
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationEnd) => {
+        const currentUrl = event.urlAfterRedirects || event.url;
+
+        // Only reload if we're navigating TO /blog from a different route
+        if ((currentUrl === '/blog' || currentUrl.startsWith('/blog')) && this.previousUrl !== currentUrl && !currentUrl.includes('/blog/')) {
+          this.loadBlogs();
+        }
+
+        // Update previous URL
+        this.previousUrl = currentUrl;
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // Load blogs
-  public loadBlogs() 
-  {
+  public loadBlogs() {
     this.blogService.getBlogs().pipe(
       tap(res => {
         const items = res?.data || [];
@@ -91,6 +111,7 @@ export class BlogComponent implements OnInit
         this.initializeFilters();
         this.applyFilters();
         this.featuredPost = this.blogPosts.find(post => post.isFeatured) || this.blogPosts[0] || null;
+        this.cdr.detectChanges(); // Trigger change detection
       })
     ).subscribe({
       next: () => {
@@ -103,8 +124,7 @@ export class BlogComponent implements OnInit
   }
 
   // Map DTO to BlogPost
-  private mapDtoToPost(dto: BlogPostDto): BlogPost 
-  {
+  private mapDtoToPost(dto: BlogPostDto): BlogPost {
     return {
       title: dto.title,
       slug: dto.slug,
@@ -118,12 +138,10 @@ export class BlogComponent implements OnInit
   }
 
 
-  private initializeFilters()
-  {
+  private initializeFilters() {
     // Extract categories
     const categoryMap = new Map<string, number>();
-    this.blogPosts.forEach(post =>
-    {
+    this.blogPosts.forEach(post => {
       const count = categoryMap.get(post.category) || 0;
       categoryMap.set(post.category, count + 1);
     });
@@ -136,49 +154,42 @@ export class BlogComponent implements OnInit
 
     // Extract tags
     const tagMap = new Map<string, number>();
-    this.blogPosts.forEach(post =>
-    {
-      post.tags.forEach(tag =>
-      {
+    this.blogPosts.forEach(post => {
+      post.tags.forEach(tag => {
         const count = tagMap.get(tag) || 0;
         tagMap.set(tag, count + 1);
       });
     });
 
     this.tags = Array.from(tagMap.entries())
-      .map(([name, count]) => ({name, count, slug: name.toLowerCase().replace(/\s+/g, '-')}))
+      .map(([name, count]) => ({ name, count, slug: name.toLowerCase().replace(/\s+/g, '-') }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 20); // Top 20 tags
   }
 
-  onSearch()
-  {
+  onSearch() {
     this.currentPage = 1;
     this.applyFilters();
   }
 
-  onCategoryChange(category: string)
-  {
+  onCategoryChange(category: string) {
     this.selectedCategory = category;
     this.currentPage = 1;
     this.loadBlogs(); // Reload from API with category filter
   }
 
-  onTagChange(tag: string)
-  {
+  onTagChange(tag: string) {
     this.selectedTag = tag;
     this.currentPage = 1;
     this.applyFilters();
   }
 
-  onSortChange()
-  {
+  onSortChange() {
     this.currentPage = 1;
     this.applyFilters();
   }
 
-  clearFilters()
-  {
+  clearFilters() {
     this.searchQuery = '';
     this.selectedCategory = '';
     this.selectedTag = '';
@@ -187,18 +198,15 @@ export class BlogComponent implements OnInit
     this.applyFilters();
   }
 
-  toggleFilters()
-  {
+  toggleFilters() {
     this.showFilters = !this.showFilters;
   }
 
-  private applyFilters()
-  {
+  private applyFilters() {
     let filtered = [...this.blogPosts];
 
     // Search filter
-    if (this.searchQuery.trim())
-    {
+    if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(query) ||
@@ -208,14 +216,12 @@ export class BlogComponent implements OnInit
     }
 
     // Category filter
-    if (this.selectedCategory)
-    {
+    if (this.selectedCategory) {
       filtered = filtered.filter(post => post.category === this.selectedCategory);
     }
 
     // Tag filter
-    if (this.selectedTag)
-    {
+    if (this.selectedTag) {
       filtered = filtered.filter(post =>
         post.tags.some(tag => tag.toLowerCase() === this.selectedTag.toLowerCase())
       );
@@ -226,32 +232,27 @@ export class BlogComponent implements OnInit
     this.getTotalPages();
   }
 
-  getPagedPosts()
-  {
+  getPagedPosts() {
     const startIndex = (this.currentPage - 1) * this.postsPerPage;
     const endIndex = startIndex + this.postsPerPage;
     return this.filteredPosts.slice(startIndex, endIndex);
   }
 
-  getTotalPages()
-  {
+  getTotalPages() {
     let totalPages = Math.ceil((this.filteredPosts?.length || 0) / this.postsPerPage);
     this.totalPages = totalPages;
   }
 
-  getPageNumbers(): number[]
-  {
-    return Array.from({length: this.totalPages}, (_, i) => i);
+  getPageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
   }
 
-  onPageChange(page: number)
-  {
+  onPageChange(page: number) {
     this.currentPage = page;
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  formatDate(dateString: string): string
-  {
+  formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -260,15 +261,12 @@ export class BlogComponent implements OnInit
     });
   }
 
-  getReadingTimeText(minutes: number): string
-  {
+  getReadingTimeText(minutes: number): string {
     return `${minutes} min read`;
   }
 
-  formatNumber(num: number): string
-  {
-    if (num >= 1000)
-    {
+  formatNumber(num: number): string {
+    if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();

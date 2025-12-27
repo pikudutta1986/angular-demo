@@ -1,0 +1,67 @@
+<div class="checkout-page">
+    <div class="checkout-container">
+        <h1 class="page-title">Checkout</h1>
+
+        <!-- Empty Cart Message -->
+        <div *ngIf="cartItems.length === 0" class="empty-cart">
+            <h2>Your cart is empty</h2>
+            <p>Add some products to get started!</p>
+            <a routerLink="/products" class="btn-primary">Shop Products</a>
+        </div>
+
+        <!-- Checkout Content -->
+        <div *ngIf="cartItems.length > 0" class="checkout-content">
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <h2>Order Summary</h2>
+
+                <div class="cart-items">
+                    <div *ngFor="let item of cartItems" class="cart-item">
+                        <img [src]="item.product.images.split('|')[0]" [alt]="item.product.name">
+                        <div class="item-details">
+                            <h3>{{ item.product.name }}</h3>
+                            <p class="quantity">Qty: {{ item.quantity }}</p>
+                        </div>
+                        <div class="item-price">${{ item.total.toFixed(2) }}</div>
+                    </div>
+                </div>
+
+                <div class="order-totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>${{ getSubtotal().toFixed(2) }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Shipping:</span>
+                        <span>${{ getShipping().toFixed(2) }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Tax:</span>
+                        <span>${{ getTax().toFixed(2) }}</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Total:</span>
+                        <span>${{ getTotal().toFixed(2) }}</span>
+                    </div>
+                </div>
+
+                <!-- Login Warning -->
+                <div *ngIf="!isLoggedIn" class="login-warning">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Please login to place your order</span>
+                </div>
+
+                <!-- Place Order Button -->
+                <button class="btn-place-order" (click)="placeOrder()">
+                    {{ isLoggedIn ? 'Place Order' : 'Login to Place Order' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
