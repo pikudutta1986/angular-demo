@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../services/cart.service';
 import { Subject, takeUntil } from 'rxjs';
+import { generateProductSlug } from '../../utils/slug.util';
 
 @Component({
   selector: 'app-cart',
@@ -80,5 +81,9 @@ export class CartComponent implements OnInit, OnDestroy {
 
   isEmpty(): boolean {
     return this.cartService.isEmpty();
+  }
+
+  getProductSlug(product: any): string {
+    return generateProductSlug(product.name, product.id);
   }
 }

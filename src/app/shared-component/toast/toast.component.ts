@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService, Toast } from '../../services/toast.service';
 import { Subject } from 'rxjs';
@@ -8,15 +8,15 @@ import { takeUntil } from 'rxjs/operators';
   selector: 'app-toast',
   standalone: true,
   imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None,
   template: `
     <div class="toast-container">
-      <div *ngFor="let toast of toasts" 
+      <div *ngFor="let toast of toasts; trackBy: trackByToastId" 
            class="toast" 
            [class.toast-success]="toast.type === 'success'"
            [class.toast-error]="toast.type === 'error'"
            [class.toast-info]="toast.type === 'info'"
-           [class.toast-warning]="toast.type === 'warning'"
-           [@slideIn]>
+           [class.toast-warning]="toast.type === 'warning'">
         <div class="toast-icon">
           <svg *ngIf="toast.type === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -39,7 +39,7 @@ import { takeUntil } from 'rxjs/operators';
           </svg>
         </div>
         <div class="toast-message">{{ toast.message }}</div>
-        <button class="toast-close" (click)="removeToast(toast.id)">
+        <button class="toast-close" (click)="removeToast(toast.id)" type="button" aria-label="Close">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -136,10 +136,32 @@ import { takeUntil } from 'rxjs/operators';
       flex: 1;
       font-size: 0.9375rem;
       font-weight: 600;
-      color: #1a202c;
+      color: #000000 !important;
       line-height: 1.5;
       z-index: 1;
       position: relative;
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+    }
+
+    .toast .toast-message,
+    .toast-success .toast-message,
+    .toast-error .toast-message,
+    .toast-info .toast-message,
+    .toast-warning .toast-message {
+      color: #000000 !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+    }
+
+    app-toast .toast-message,
+    app-toast .toast .toast-message {
+      color: #000000 !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
     }
 
     .toast-close {
@@ -203,5 +225,9 @@ export class ToastComponent implements OnInit, OnDestroy {
 
   removeToast(id: string) {
     this.toasts = this.toasts.filter(t => t.id !== id);
+  }
+
+  trackByToastId(index: number, toast: Toast): string {
+    return toast.id;
   }
 }

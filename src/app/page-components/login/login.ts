@@ -73,8 +73,15 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           this.isLoading = false;
           if (response.success) {
-            // Navigate to home page after successful login
-            this.router.navigate(['/home']);
+            // Check if user is admin and redirect accordingly
+            const user = response.data || response.user;
+            if (user && user.role === 'ADMIN') {
+              // Redirect admin users to admin panel
+              this.router.navigate(['/admin']);
+            } else {
+              // Redirect regular users to home page
+              this.router.navigate(['/home']);
+            }
           } else {
             this.errorMessage = response.message || 'Login failed. Please try again.';
           }

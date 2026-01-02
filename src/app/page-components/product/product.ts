@@ -6,6 +6,7 @@ import { ProductService, ProductDto } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { generateProductSlug } from '../../utils/slug.util';
 
 interface Product {
   id: number;
@@ -97,6 +98,10 @@ export class ProductComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    // Initialize price range with default max if not set
+    if (this.filters.priceRange.max === 0) {
+      this.filters.priceRange.max = 10000;
+    }
     // Load paginated products immediately
     this.loadProducts();
     // Also load all products in background for filter options and total count
@@ -226,36 +231,33 @@ export class ProductComponent implements OnInit, OnDestroy {
         }
 
         this.products = items.map(item => this.mapDtoToProduct(item));
-        this.filteredProducts = [...this.products];
-
-        // Use server-side pagination if available
+        
+        // Use server-side pagination - always rely on server response
         if (res.total !== undefined) {
           this.totalProducts = res.total;
           this.totalPages = res.totalPages || Math.ceil(res.total / this.itemsPerPage);
         } else {
-          // Calculate total from cached products with same filters
-          if (this.allProductsCache.length > 0) {
-            this.calculateTotalFromCache();
-          } else {
-            // If cache not ready, estimate from current page (will be updated when cache loads)
-            // Assume there are more pages if we got a full page of results
-            if (items.length === this.itemsPerPage) {
-              this.totalPages = this.currentPage + 1; // At least one more page
-            } else {
-              this.totalPages = Math.max(1, this.currentPage);
-            }
+          // Fallback: if server doesn't provide total, estimate from current page
+          if (items.length === this.itemsPerPage) {
+            // Assume there are more pages if we got a full page
+            this.totalPages = this.currentPage + 1;
             this.totalProducts = this.totalPages * this.itemsPerPage;
+          } else {
+            // Last page or only page
+            this.totalPages = Math.max(1, this.currentPage);
+            this.totalProducts = (this.currentPage - 1) * this.itemsPerPage + items.length;
           }
         }
 
-        this.initializeFilters();
-        // Apply client-side filters only if any are active
+        // Apply client-side filters only for display (brand, rating, stock, new, sale)
+        // These don't affect server-side pagination count
         if (this.hasActiveClientSideFilters()) {
           this.applyClientSideFilters();
         } else {
-          // No client-side filters, use products as-is from server
           this.filteredProducts = [...this.products];
         }
+
+        this.initializeFilters();
         this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
       },
       error: (err) => {
@@ -305,27 +307,15 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   private loadAllProductsForFiltering() {
-    // Load all products without pagination to get filter options and total count
-    this.productService.getProducts({}).subscribe({
+    // Load all products without pagination to get filter options only
+    // Note: This is only for initializing filter dropdowns, not for pagination
+    this.productService.getProducts({ pageSize: 1000 }).subscribe({
       next: (res) => {
         const allItems = res?.data || [];
         this.allProductsCache = allItems;
 
-        // Initialize filters from all products
+        // Initialize filters from all products (for dropdown options only)
         this.initializeFiltersFromAllProducts(allItems);
-
-        // Recalculate total based on current filters
-        if (this.filters.categories.length > 0 || this.filters.priceRange.min > 0 || this.filters.priceRange.max > 0) {
-          this.calculateTotalFromCache();
-        } else {
-          // No filters applied, use total from all products
-          this.totalProducts = res?.total || allItems.length;
-          if (res.totalPages) {
-            this.totalPages = res.totalPages;
-          } else {
-            this.totalPages = Math.ceil(this.totalProducts / this.itemsPerPage);
-          }
-        }
       },
       error: (err) => {
         console.error('Error loading all products for filtering:', err);
@@ -379,7 +369,6 @@ export class ProductComponent implements OnInit, OnDestroy {
       this.filters.categories = this.filters.categories.filter(c => c !== category);
     }
     this.currentPage = 1;
-    this.calculateTotalFromCache();
     this.loadProducts();
   }
 
@@ -395,7 +384,6 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   onPriceRangeChange() {
     this.currentPage = 1;
-    this.calculateTotalFromCache();
     this.loadProducts();
   }
 
@@ -429,31 +417,17 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   clearAllFilters() {
-    // Reset to dynamic price range from cached products
-    if (this.allProductsCache.length > 0) {
-      const allMapped = this.allProductsCache.map(item => this.mapDtoToProduct(item));
-      const prices = allMapped.map(p => p.price);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      this.filters.priceRange = {
-        min: Math.floor(minPrice),
-        max: Math.ceil(maxPrice)
-      };
-    } else {
-      this.filters.priceRange = { min: 0, max: 0 };
-    }
-
+    // Reset filters - price range will be set after loading products
     this.filters = {
       categories: [],
       brands: [],
-      priceRange: this.filters.priceRange,
+      priceRange: { min: 0, max: 0 },
       ratings: [],
       inStock: false,
       isNew: false,
       isSale: false
     };
     this.currentPage = 1;
-    this.calculateTotalFromCache();
     this.loadProducts();
   }
 
@@ -531,16 +505,14 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   getPagedProducts() {
-    // With server-side pagination, products are already paged
+    // With server-side pagination, products are already paged from server
+    // Client-side filters (brand, rating, etc.) are applied for display only
     return this.filteredProducts;
   }
 
   getTotalPages(): number {
-    // Use server-side totalPages if available, otherwise calculate
-    if (this.totalPages > 0) {
-      return this.totalPages;
-    }
-    return Math.ceil(this.filteredProducts.length / this.itemsPerPage);
+    // Always use server-side totalPages
+    return this.totalPages || 1;
   }
 
   getPageNumbers(): number[] {
@@ -592,5 +564,32 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   getBrandCount(brand: string): number {
     return this.products.filter(p => p.brand === brand).length;
+  }
+
+  getMaxPrice(): number {
+    // Always use 10000 as the maximum for the slider range
+    // The actual max price from products is used for filtering, but slider needs a fixed max
+    return 10000;
+  }
+
+  getMinPrice(): number {
+    // Ensure min is at least 0 and not greater than the current min value
+    return Math.max(0, this.filters.priceRange.min || 0);
+  }
+
+  getRangeLeft(): number {
+    const maxPrice = this.getMaxPrice();
+    const minValue = this.filters.priceRange.min || 0;
+    // Return percentage (0-100) for the left position
+    return (minValue / maxPrice) * 100;
+  }
+
+  getRangeWidth(): number {
+    const maxPrice = this.getMaxPrice();
+    const minValue = this.filters.priceRange.min || 0;
+    const maxValue = this.filters.priceRange.max || maxPrice;
+    const leftPercent = (minValue / maxPrice) * 100;
+    const rightPercent = (maxValue / maxPrice) * 100;
+    return Math.max(0, rightPercent - leftPercent);
   }
 }

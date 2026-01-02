@@ -33,7 +33,7 @@
 
           <div class="item-details">
             <h3 class="item-name">
-              <a [routerLink]="['/product', item.product.id]">{{ item.product.name }}</a>
+              <a [routerLink]="['/product', getProductSlug(item.product)]">{{ item.product.name }}</a>
             </h3>
             <p class="item-category">{{ item.product.category }}</p>
             <p class="item-code">Code: {{ item.product.code }}</p>

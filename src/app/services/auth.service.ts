@@ -214,6 +214,46 @@ export class AuthService {
   }
 
   /**
+   * Update user profile
+   */
+  updateProfile(userData: { name?: string; email?: string }): Observable<{ success: boolean; data: User; message: string }> {
+    const user = this.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    // Try user-specific endpoint first, fallback to admin endpoint
+    return this.http.put<{ success: boolean; data: User; message: string }>(
+      `${this.baseUrl}/admin/users/${user.id}`,
+      userData
+    ).pipe(
+      tap(response => {
+        if (response.success && response.data) {
+          this.setUser(response.data);
+          this.currentUserSubject.next(response.data);
+        }
+      })
+    );
+  }
+
+  /**
+   * Change password
+   */
+  changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse> {
+    const user = this.getCurrentUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    // Send both current and new password for validation
+    return this.http.put<ApiResponse>(
+      `${this.baseUrl}/admin/users/${user.id}`,
+      { 
+        currentPassword: currentPassword,
+        password: newPassword 
+      }
+    );
+  }
+
+  /**
    * Check token validity (basic check - token exists)
    */
   private checkTokenValidity(): void {

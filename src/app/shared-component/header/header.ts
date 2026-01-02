@@ -89,4 +89,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .toUpperCase()
       .slice(0, 2);
   }
+
+  isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
 }

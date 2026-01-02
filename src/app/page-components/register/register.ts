@@ -101,15 +101,57 @@ export class RegisterComponent implements OnInit {
   ageValidator(control: AbstractControl): ValidationErrors | null {
     if (!control.value) return null;
 
-    const birthDate = new Date(control.value);
+    let birthDate: Date;
+    
+    // Handle different date formats
+    if (typeof control.value === 'string') {
+      // Check if it's in YYYY-MM-DD format (from HTML date input)
+      if (control.value.includes('-')) {
+        const dateParts = control.value.split('-');
+        if (dateParts.length === 3) {
+          // Create date in local timezone
+          birthDate = new Date(
+            parseInt(dateParts[0], 10),
+            parseInt(dateParts[1], 10) - 1, // Month is 0-indexed
+            parseInt(dateParts[2], 10)
+          );
+        } else {
+          // Try parsing as-is
+          birthDate = new Date(control.value);
+        }
+      } else {
+        // Try parsing as-is
+        birthDate = new Date(control.value);
+      }
+    } else if (control.value instanceof Date) {
+      birthDate = control.value;
+    } else {
+      birthDate = new Date(control.value);
+    }
+    
+    // Check if date is valid
+    if (isNaN(birthDate.getTime())) {
+      return { ageInvalid: true };
+    }
+    
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    
+    // Check if birth date is in the future
+    if (birthDate > today) {
       return { ageInvalid: true };
     }
 
+    // Calculate age correctly
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    // If birthday hasn't occurred yet this year, subtract 1 from age
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+
+    // Check if age is at least 13
     return age < 13 ? { ageInvalid: true } : null;
   }
 

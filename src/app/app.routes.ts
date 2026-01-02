@@ -13,6 +13,7 @@ import { CheckoutComponent } from './page-components/checkout/checkout';
 import { AccountComponent } from './page-components/account/account';
 import { ForgotPasswordComponent } from './page-components/forgot-password/forgot-password';
 import { ResetPasswordComponent } from './page-components/reset-password/reset-password';
+import { OrdersComponent } from './page-components/orders/orders';
 
 // IMPORT GUARDS
 import { authGuard } from './guards/auth.guard';
@@ -37,7 +38,7 @@ export const routes: Routes = [
 
   // Product routes
   { path: 'products', component: ProductComponent, title: 'Products' },
-  { path: 'product/:id', component: ProductDetailsComponent, title: 'Product Details' },
+  { path: 'product/:slug', component: ProductDetailsComponent, title: 'Product Details' },
 
   // Blog routes
   { path: 'blog', component: BlogComponent, title: 'Blog' },
@@ -49,6 +50,7 @@ export const routes: Routes = [
 
   // Account route (protected)
   { path: 'account', component: AccountComponent, title: 'My Account', canActivate: [authGuard] },
+  { path: 'orders', component: OrdersComponent, title: 'My Orders', canActivate: [authGuard] },
 
   // Admin routes (protected with admin guard)
   {

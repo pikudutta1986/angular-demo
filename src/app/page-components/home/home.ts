@@ -5,6 +5,7 @@ import { ProductService, ProductDto } from '../../services/product.service';
 import { BlogService, BlogPostDto } from '../../services/blog.service';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
+import { generateProductSlug } from '../../utils/slug.util';
 
 interface FeaturedProduct {
   id: number;
@@ -207,7 +208,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       reviewCount: Math.floor(Math.random() * 200) + 50,
       isNew: daysSinceCreation <= 30,
       isSale: false,
-      slug: dto.name.toLowerCase().replace(/\s+/g, '-')
+      slug: generateProductSlug(dto.name, dto.id)
     };
   }
 

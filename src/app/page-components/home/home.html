@@ -49,7 +49,7 @@
       </div>
 
       <div class="products-grid">
-        <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/product', product.id]">
+        <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/product', product.slug]">
           <div class="product-image">
             <img [src]="product.image" [alt]="product.name">
 

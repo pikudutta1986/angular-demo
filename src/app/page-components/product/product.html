@@ -56,9 +56,12 @@
         <h4 class="filter-title">Price Range</h4>
         <div class="price-range">
           <div class="price-slider">
-            <input type="range" [(ngModel)]="filters.priceRange.min" [min]="0" [max]="filters.priceRange.max"
+            <div class="slider-track">
+              <div class="slider-range" [style.left.%]="getRangeLeft()" [style.width.%]="getRangeWidth()"></div>
+            </div>
+            <input type="range" [(ngModel)]="filters.priceRange.min" [min]="0" [max]="getMaxPrice()"
               (ngModelChange)="onPriceRangeChange()" class="slider slider-min" />
-            <input type="range" [(ngModel)]="filters.priceRange.max" [min]="filters.priceRange.min" [max]="10000"
+            <input type="range" [(ngModel)]="filters.priceRange.max" [min]="getMinPrice()" [max]="getMaxPrice()"
               (ngModelChange)="onPriceRangeChange()" class="slider slider-max" />
           </div>
           <div class="price-display">
@@ -190,7 +193,7 @@
       <!-- Products Grid/List -->
       <div *ngIf="!isLoading && !errorMessage" class="products-container" [class.grid-view]="viewMode === 'grid'"
         [class.list-view]="viewMode === 'list'">
-        <div *ngFor="let product of getPagedProducts()" class="product-card" [routerLink]="['/product', product.id]">
+        <div *ngFor="let product of getPagedProducts()" class="product-card" [routerLink]="['/product', getProductSlug(product)]">
           <!-- Product Image -->
           <div class="product-image">
             <img [src]="product.image" [alt]="product.name" loading="lazy"

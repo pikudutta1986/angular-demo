@@ -1,0 +1,237 @@
+.account-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 2rem 0;
+}
+
+.account-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  font-size: 1.125rem;
+  color: #718096;
+}
+
+.account-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.account-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+}
+
+.section-description {
+  font-size: 0.9375rem;
+  color: #718096;
+}
+
+.profile-form,
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  &.error {
+    border-color: #e53e3e;
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .form-input {
+    padding-right: 3rem;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: #718096;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #4a5568;
+    }
+  }
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.admin {
+    background: #667eea;
+    color: white;
+  }
+}
+
+.error-message {
+  font-size: 0.875rem;
+  color: #e53e3e;
+  margin-top: 0.25rem;
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+}
+
+.strength-indicator {
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &.weak {
+    background: #fed7d7;
+    color: #c53030;
+  }
+
+  &.medium {
+    background: #feebc8;
+    color: #c05621;
+  }
+
+  &.strong {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+}
+
+.form-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .account-page {
+    padding: 1rem 0;
+  }
+
+  .account-container {
+    padding: 0 1rem;
+  }
+
+  .account-section {
+    padding: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+}
+

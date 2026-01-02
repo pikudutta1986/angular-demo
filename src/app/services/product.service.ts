@@ -70,5 +70,15 @@ export class ProductService {
       `${this.baseUrl}/product/${id}`
     );
   }
+
+  /**
+   * Get product by slug
+   * The backend will extract the ID from the slug
+   */
+  getProductBySlug(slug: string): Observable<{ success: boolean; data: ProductDto; message?: string; error?: string }> {
+    return this.http.get<{ success: boolean; data: ProductDto; message?: string; error?: string }>(
+      `${this.baseUrl}/product/slug/${slug}`
+    );
+  }
 }
 

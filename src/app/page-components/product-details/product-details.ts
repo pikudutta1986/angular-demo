@@ -6,6 +6,7 @@ import { ProductService, ProductDto } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { generateProductSlug, extractIdFromSlug } from '../../utils/slug.util';
 
 interface ProductImage {
   id: number;
@@ -86,30 +87,34 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Load product immediately from route snapshot (for initial load)
-    const productId = this.route.snapshot.paramMap.get('id');
-    if (productId) {
-      this.loadProduct(+productId);
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (slug) {
+      this.loadProductBySlug(slug);
     } else {
       this.isLoading = false;
-      this.errorMessage = 'Invalid product ID';
+      this.errorMessage = 'Invalid product slug';
     }
 
     // Subscribe to route parameter changes (for navigation between products)
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
-        const newProductId = params.get('id');
-        if (newProductId) {
-          const id = +newProductId;
-          // Only reload if the ID actually changed (avoid reload on same product)
-          if (!this.product || this.product.id !== id) {
-            this.loadProduct(id);
+        const newSlug = params.get('slug');
+        if (newSlug) {
+          // Only reload if the slug actually changed (avoid reload on same product)
+          if (!this.product || this.getCurrentSlug() !== newSlug) {
+            this.loadProductBySlug(newSlug);
           }
         } else {
           this.isLoading = false;
-          this.errorMessage = 'Invalid product ID';
+          this.errorMessage = 'Invalid product slug';
         }
       });
+  }
+
+  private getCurrentSlug(): string {
+    if (!this.product) return '';
+    return generateProductSlug(this.product.name, this.product.id);
   }
 
   ngOnDestroy() {
@@ -117,7 +122,72 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  public loadProduct(id: number) {
+  public loadProductBySlug(slug: string) {
+    // Reset state when loading new product
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.product = null;
+    this.selectedImageIndex = 0;
+    this.selectedVariants = {};
+    this.quantity = 1;
+    this.activeTab = 'description';
+
+    if (!slug || slug.trim() === '') {
+      this.isLoading = false;
+      this.errorMessage = 'Invalid product slug';
+      return;
+    }
+
+    // Try to get product by slug first, fallback to extracting ID from slug
+    this.productService.getProductBySlug(slug).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.error) {
+          this.errorMessage = res.error || 'Product not found';
+          this.product = null;
+          return;
+        }
+        const dto = res?.data;
+        if (!dto) {
+          this.errorMessage = 'Product not found';
+          this.product = null;
+          this.productDto = null;
+          return;
+        }
+        this.productDto = dto;
+        this.product = this.mapDtoToProductDetails(dto);
+        this.initializeVariants();
+        this.loadRelatedProducts(dto.category);
+        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
+      },
+      error: (err) => {
+        // If slug-based lookup fails, try extracting ID from slug as fallback
+        const productId = extractIdFromSlug(slug);
+        if (productId && err.status === 404) {
+          // Fallback to ID-based lookup
+          this.loadProductById(productId);
+          return;
+        }
+
+        this.isLoading = false;
+        console.error('Error loading product:', err);
+
+        // Handle different error types
+        if (err.status === 404) {
+          this.errorMessage = 'Product not found';
+        } else if (err.status === 400) {
+          this.errorMessage = err.error?.message || 'Invalid product request';
+        } else if (err.status >= 500) {
+          this.errorMessage = 'Server error. Please try again later.';
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Failed to load product';
+        }
+        this.product = null;
+      }
+    });
+  }
+
+  private loadProductById(id: number) {
     // Reset state when loading new product
     this.isLoading = true;
     this.errorMessage = null;
@@ -152,7 +222,15 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
         this.product = this.mapDtoToProductDetails(dto);
         this.initializeVariants();
         this.loadRelatedProducts(dto.category);
-        this.cdr.detectChanges(); // Trigger change detection for SSR/zoneless mode
+        
+        // Update URL to use slug if it's currently using ID
+        const currentSlug = this.route.snapshot.paramMap.get('slug');
+        const expectedSlug = generateProductSlug(dto.name, dto.id);
+        if (currentSlug !== expectedSlug) {
+          this.router.navigate(['/product', expectedSlug], { replaceUrl: true });
+        }
+        
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading = false;
@@ -393,8 +471,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     return Math.floor(rating);
   }
 
-  onRelatedProductClick(productId: number) {
-    this.router.navigate(['/product', productId]);
+  onRelatedProductClick(product: any) {
+    const slug = generateProductSlug(product.name, product.id);
+    this.router.navigate(['/product', slug]);
   }
 
   goToProducts() {
@@ -402,9 +481,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   }
 
   retryLoad() {
-    const productId = this.route.snapshot.paramMap.get('id');
-    if (productId) {
-      this.loadProduct(+productId);
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (slug) {
+      this.loadProductBySlug(slug);
     }
   }
 }

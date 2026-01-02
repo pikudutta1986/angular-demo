@@ -1,67 +1,206 @@
 <div class="checkout-page">
-    <div class="checkout-container">
-        <h1 class="page-title">Checkout</h1>
+  <div class="checkout-container">
+    <h1 class="page-title">Checkout</h1>
 
-        <!-- Empty Cart Message -->
-        <div *ngIf="cartItems.length === 0" class="empty-cart">
-            <h2>Your cart is empty</h2>
-            <p>Add some products to get started!</p>
-            <a routerLink="/products" class="btn-primary">Shop Products</a>
-        </div>
-
-        <!-- Checkout Content -->
-        <div *ngIf="cartItems.length > 0" class="checkout-content">
-            <!-- Cart Summary -->
-            <div class="cart-summary">
-                <h2>Order Summary</h2>
-
-                <div class="cart-items">
-                    <div *ngFor="let item of cartItems" class="cart-item">
-                        <img [src]="item.product.images.split('|')[0]" [alt]="item.product.name">
-                        <div class="item-details">
-                            <h3>{{ item.product.name }}</h3>
-                            <p class="quantity">Qty: {{ item.quantity }}</p>
-                        </div>
-                        <div class="item-price">${{ item.total.toFixed(2) }}</div>
-                    </div>
-                </div>
-
-                <div class="order-totals">
-                    <div class="total-row">
-                        <span>Subtotal:</span>
-                        <span>${{ getSubtotal().toFixed(2) }}</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Shipping:</span>
-                        <span>${{ getShipping().toFixed(2) }}</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Tax:</span>
-                        <span>${{ getTax().toFixed(2) }}</span>
-                    </div>
-                    <div class="total-row grand-total">
-                        <span>Total:</span>
-                        <span>${{ getTotal().toFixed(2) }}</span>
-                    </div>
-                </div>
-
-                <!-- Login Warning -->
-                <div *ngIf="!isLoggedIn" class="login-warning">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                        </path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                    <span>Please login to place your order</span>
-                </div>
-
-                <!-- Place Order Button -->
-                <button class="btn-place-order" (click)="placeOrder()">
-                    {{ isLoggedIn ? 'Place Order' : 'Login to Place Order' }}
-                </button>
-            </div>
-        </div>
+    <!-- Empty Cart Message -->
+    <div *ngIf="cartItems.length === 0" class="empty-cart">
+      <div class="empty-cart-content">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <h2>Your cart is empty</h2>
+        <p>Add some products to get started!</p>
+        <a routerLink="/products" class="btn btn-primary">Shop Products</a>
+      </div>
     </div>
+
+    <!-- Checkout Content -->
+    <div *ngIf="cartItems.length > 0" class="checkout-content">
+      <div class="checkout-grid">
+        <!-- Shipping Address Form -->
+        <div class="checkout-section">
+          <div class="section-header">
+            <h2>Shipping Address</h2>
+            <p>Please provide your shipping details</p>
+          </div>
+
+          <form [formGroup]="checkoutForm" class="checkout-form">
+            <div class="form-group">
+              <label for="fullName">Full Name <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="fullName" 
+                formControlName="fullName"
+                [class.invalid]="fullName?.invalid && fullName?.touched"
+                placeholder="Enter your full name">
+              <div class="error-message" *ngIf="fullName?.invalid && fullName?.touched">
+                <span *ngIf="fullName?.errors?.['required']">Full name is required</span>
+                <span *ngIf="fullName?.errors?.['minlength']">Name must be at least 3 characters</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  [class.invalid]="email?.invalid && email?.touched"
+                  placeholder="your@email.com">
+                <div class="error-message" *ngIf="email?.invalid && email?.touched">
+                  <span *ngIf="email?.errors?.['required']">Email is required</span>
+                  <span *ngIf="email?.errors?.['email']">Please enter a valid email</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone <span class="required">*</span></label>
+                <input 
+                  type="tel" 
+                  id="phone" 
+                  formControlName="phone"
+                  [class.invalid]="phone?.invalid && phone?.touched"
+                  placeholder="10-digit phone number">
+                <div class="error-message" *ngIf="phone?.invalid && phone?.touched">
+                  <span *ngIf="phone?.errors?.['required']">Phone is required</span>
+                  <span *ngIf="phone?.errors?.['pattern']">Please enter a valid 10-digit phone number</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="address">Address <span class="required">*</span></label>
+              <textarea 
+                id="address" 
+                formControlName="address"
+                [class.invalid]="address?.invalid && address?.touched"
+                rows="3"
+                placeholder="Street address, apartment, suite, etc."></textarea>
+              <div class="error-message" *ngIf="address?.invalid && address?.touched">
+                <span *ngIf="address?.errors?.['required']">Address is required</span>
+                <span *ngIf="address?.errors?.['minlength']">Address must be at least 10 characters</span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="city" 
+                  formControlName="city"
+                  [class.invalid]="city?.invalid && city?.touched"
+                  placeholder="City">
+                <div class="error-message" *ngIf="city?.invalid && city?.touched">
+                  City is required
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="state">State <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="state" 
+                  formControlName="state"
+                  [class.invalid]="state?.invalid && state?.touched"
+                  placeholder="State">
+                <div class="error-message" *ngIf="state?.invalid && state?.touched">
+                  State is required
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="zipCode">ZIP Code <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="zipCode" 
+                  formControlName="zipCode"
+                  [class.invalid]="zipCode?.invalid && zipCode?.touched"
+                  placeholder="ZIP Code">
+                <div class="error-message" *ngIf="zipCode?.invalid && zipCode?.touched">
+                  <span *ngIf="zipCode?.errors?.['required']">ZIP code is required</span>
+                  <span *ngIf="zipCode?.errors?.['pattern']">Please enter a valid ZIP code</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="country">Country <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="country" 
+                  formControlName="country"
+                  [class.invalid]="country?.invalid && country?.touched"
+                  placeholder="Country">
+                <div class="error-message" *ngIf="country?.invalid && country?.touched">
+                  Country is required
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="checkout-section order-summary">
+          <div class="section-header">
+            <h2>Order Summary</h2>
+          </div>
+
+          <div class="cart-items">
+            <div *ngFor="let item of cartItems" class="cart-item">
+              <img [src]="(item.product.images ? item.product.images.split('|')[0] : '/assets/placeholder.png')" [alt]="item.product.name">
+              <div class="item-details">
+                <h3>{{ item.product.name }}</h3>
+                <p class="quantity">Qty: {{ item.quantity }}</p>
+              </div>
+              <div class="item-price">₹{{ item.total.toFixed(2) }}</div>
+            </div>
+          </div>
+
+          <div class="order-totals">
+            <div class="total-row">
+              <span>Subtotal:</span>
+              <span>₹{{ getSubtotal().toFixed(2) }}</span>
+            </div>
+            <div class="total-row">
+              <span>Shipping:</span>
+              <span>₹{{ getShipping().toFixed(2) }}</span>
+            </div>
+            <div class="total-row">
+              <span>Tax (10%):</span>
+              <span>₹{{ getTax().toFixed(2) }}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>Total:</span>
+              <span>₹{{ getTotal().toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Payment Button -->
+          <button 
+            class="btn btn-primary btn-payment" 
+            (click)="proceedToPayment()"
+            [disabled]="isProcessing || isPaymentProcessing || checkoutForm.invalid">
+            <span *ngIf="!isProcessing && !isPaymentProcessing">Proceed to Payment</span>
+            <span *ngIf="isPaymentProcessing">Processing...</span>
+            <span *ngIf="isProcessing">Placing Order...</span>
+          </button>
+
+          <!-- Processing Overlay -->
+          <div *ngIf="isProcessing || isPaymentProcessing" class="processing-overlay">
+            <div class="processing-spinner">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+              </svg>
+            </div>
+            <p>{{ isPaymentProcessing ? 'Opening payment gateway...' : 'Placing your order...' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

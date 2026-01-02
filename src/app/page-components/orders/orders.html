@@ -1,0 +1,85 @@
+<div class="orders-page">
+  <div class="orders-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">My Orders</h1>
+      <p class="page-subtitle">View and track your order history</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+        </svg>
+      </div>
+      <p>Loading orders...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!isLoading && errorMessage" class="error-state">
+      <div class="error-content">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <h3>Error Loading Orders</h3>
+        <p>{{ errorMessage }}</p>
+        <button class="retry-btn" (click)="loadOrders()">Retry</button>
+      </div>
+    </div>
+
+    <!-- Orders List -->
+    <div *ngIf="!isLoading && !errorMessage" class="orders-list">
+      <!-- No Orders -->
+      <div *ngIf="orders.length === 0" class="no-orders">
+        <div class="no-orders-content">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+          </svg>
+          <h3>No Orders Yet</h3>
+          <p>You haven't placed any orders yet. Start shopping to see your orders here!</p>
+          <a routerLink="/products" class="btn btn-primary">Browse Products</a>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div *ngFor="let order of orders" class="order-card">
+        <div class="order-header">
+          <div class="order-info">
+            <h3 class="order-id">Order #{{ order._id.slice(-8).toUpperCase() }}</h3>
+            <p class="order-date">{{ formatDate(order.createdAt) }}</p>
+          </div>
+          <div class="order-status">
+            <span class="status-badge" [class]="getStatusClass(order.status)">
+              {{ getStatusLabel(order.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="order-products">
+          <div *ngFor="let product of order.products" class="order-product">
+            <div class="product-info">
+              <h4 class="product-name">{{ product.name }}</h4>
+              <p class="product-details">Quantity: {{ product.quantity }} × ${{ product.price }}</p>
+            </div>
+            <div class="product-total">${{ product.total }}</div>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <div class="order-total">
+            <span class="total-label">Total:</span>
+            <span class="total-amount">${{ order.orderTotal }}</span>
+          </div>
+          <button class="btn btn-outline" (click)="viewOrderDetails(order._id)">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
