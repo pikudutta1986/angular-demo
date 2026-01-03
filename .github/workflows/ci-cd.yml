@@ -20,7 +20,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build Angular SSR
         run: npm run build
@@ -47,7 +47,7 @@ jobs:
 
             cd /var/www/angular-app
 
-            npm ci --omit=dev
+            npm ci --omit=dev --legacy-peer-deps
 
             pm2 delete angular-demo-ssr || true
             pm2 start dist/angular-app/server/server.mjs \
