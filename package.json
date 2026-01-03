@@ -7,8 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build:ssr": "ng build && ng run angular-app:server:production",
-    "startssr": "concurrently \"ng build --watch\" \"ng run angular-app:server:production --watch\" \"nodemon --watch dist/angular-app/server dist/angular-app/server/main.js\""
+    "build:ssr": "ng build",
+    "start:ssr": "node dist/angular-app/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,
