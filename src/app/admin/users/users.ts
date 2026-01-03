@@ -22,6 +22,7 @@ export class AdminUsersComponent implements OnInit {
     selectedUser: User | null = null;
     showEditModal = false;
     editForm: any = {};
+    errorMessage: string | null = null;
 
     constructor(private adminService: AdminService) {}
 
@@ -31,20 +32,39 @@ export class AdminUsersComponent implements OnInit {
 
     loadUsers() {
         this.loading = true;
+        this.errorMessage = null;
         this.adminService.getUsers(this.currentPage, this.pageSize, this.roleFilter || undefined, this.searchTerm || undefined)
             .subscribe({
                 next: (response) => {
+                    console.log('Users response:', response);
                     if (response.success) {
-                        this.users = response.data;
+                        this.users = response.data || [];
                         if (response.pagination) {
                             this.totalPages = response.pagination.totalPages;
                             this.total = response.pagination.total;
+                        } else {
+                            // Fallback if pagination is missing
+                            this.totalPages = 1;
+                            this.total = this.users.length;
                         }
+                        this.errorMessage = null;
+                    } else {
+                        console.warn('Response not successful:', response);
+                        this.users = [];
+                        this.errorMessage = response.message || 'Failed to load users';
                     }
                     this.loading = false;
                 },
                 error: (error) => {
                     console.error('Error loading users:', error);
+                    console.error('Error details:', {
+                        status: error.status,
+                        statusText: error.statusText,
+                        message: error.message,
+                        error: error.error
+                    });
+                    this.users = [];
+                    this.errorMessage = error.error?.message || error.message || 'Failed to load users. Please check your connection and try again.';
                     this.loading = false;
                 }
             });

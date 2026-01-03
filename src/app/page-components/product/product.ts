@@ -592,4 +592,8 @@ export class ProductComponent implements OnInit, OnDestroy {
     const rightPercent = (maxValue / maxPrice) * 100;
     return Math.max(0, rightPercent - leftPercent);
   }
+
+  getProductSlug(product: Product): string {
+    return generateProductSlug(product.name, product.id);
+  }
 }
