@@ -52,7 +52,7 @@ jobs:
             npm ci --omit=dev --legacy-peer-deps
 
             pm2 delete angular-demo-ssr || true
-            pm2 start dist/angular-app/server/server.mjs \
+            pm2 start server/server.mjs \
               --name angular-demo-ssr \
               --interpreter node
 
