@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "dist/angular-app/**"
-          target: "/var/www/html/angular-app"
+          target: "/var/www/html"
           strip_components: 2
 
       - name: Restart PM2 on VPS
@@ -45,7 +45,7 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             source "$NVM_DIR/nvm.sh"
 
-            cd /var/www/html/angular-app
+            cd /var/www/html
 
             rm -rf node_modules package-lock.json
 
