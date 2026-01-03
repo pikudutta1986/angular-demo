@@ -1,0 +1,52 @@
+name: Deploy Angular Demo SSR
+
+on:
+  push:
+    branches:
+      - main   # or your production branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular SSR
+        run: |
+          npm run build
+          npm run buildprod:ssr
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "dist/angular-app/**"
+          target: "/var/www/html"
+          strip_components: 0
+
+      - name: Restart PM2 on VPS
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            cd /var/www/html
+            npm ci --omit=dev
+            pm2 restart angular-demo-ssr || pm2 start dist/angular-app/server/main.js --name angular-demo-ssr
+            pm2 save
+

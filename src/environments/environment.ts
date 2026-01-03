@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  apiBase: '/api'  // Using proxy - no CORS issues!
+  apiBase: 'http://148.135.138.159:5000/api'
 };
 
 /*
