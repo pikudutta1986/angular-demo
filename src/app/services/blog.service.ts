@@ -46,6 +46,52 @@ export class BlogService
       `${this.baseUrl}/blog/${id}`
     );
   }
+
+  /**
+   * Create a new blog post (Admin only)
+   */
+  createBlog(blogData: {
+    title: string;
+    slug: string;
+    content: string;
+    image_url: string;
+    tags: string[];
+    category: string;
+  }): Observable<{success: boolean; data: BlogPostDto; message?: string; error?: string}>
+  {
+    return this.http.post<{success: boolean; data: BlogPostDto; message?: string; error?: string}>(
+      `${this.baseUrl}/blog`,
+      blogData
+    );
+  }
+
+  /**
+   * Update a blog post (Admin only)
+   */
+  updateBlog(id: string, blogData: {
+    title?: string;
+    slug?: string;
+    content?: string;
+    image_url?: string;
+    tags?: string[];
+    category?: string;
+  }): Observable<{success: boolean; data: BlogPostDto; message?: string; error?: string}>
+  {
+    return this.http.put<{success: boolean; data: BlogPostDto; message?: string; error?: string}>(
+      `${this.baseUrl}/blog/${id}`,
+      blogData
+    );
+  }
+
+  /**
+   * Delete a blog post (Admin only)
+   */
+  deleteBlog(id: string): Observable<{success: boolean; message?: string; error?: string}>
+  {
+    return this.http.delete<{success: boolean; message?: string; error?: string}>(
+      `${this.baseUrl}/blog/${id}`
+    );
+  }
 }
 
 

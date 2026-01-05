@@ -19,8 +19,9 @@ export class AdminLayoutComponent {
         { label: 'Dashboard', icon: 'grid', route: '/admin' },
         { label: 'Users', icon: 'users', route: '/admin/users' },
         { label: 'Orders', icon: 'shopping-cart', route: '/admin/orders' },
-        { label: 'Products', icon: 'box', route: '/products' },
-        { label: 'Blogs', icon: 'box', route: '/blog' }
+        { label: 'Products', icon: 'box', route: '/admin/products' },
+        { label: 'Blogs', icon: 'file-text', route: '/admin/blogs' },
+        { label: 'Settings', icon: 'settings', route: '/admin/settings' }
     ];
 
     constructor(private authService: AuthService, private router: Router) {

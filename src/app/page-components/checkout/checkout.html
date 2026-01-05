@@ -157,26 +157,26 @@
                 <h3>{{ item.product.name }}</h3>
                 <p class="quantity">Qty: {{ item.quantity }}</p>
               </div>
-              <div class="item-price">₹{{ item.total.toFixed(2) }}</div>
+              <div class="item-price">{{ formatPrice(item.total) }}</div>
             </div>
           </div>
 
           <div class="order-totals">
             <div class="total-row">
               <span>Subtotal:</span>
-              <span>₹{{ getSubtotal().toFixed(2) }}</span>
+              <span>{{ formatPrice(getSubtotal()) }}</span>
             </div>
             <div class="total-row">
               <span>Shipping:</span>
-              <span>₹{{ getShipping().toFixed(2) }}</span>
+              <span>{{ getShipping() === 0 ? 'Free' : formatPrice(getShipping()) }}</span>
             </div>
             <div class="total-row">
-              <span>Tax (10%):</span>
-              <span>₹{{ getTax().toFixed(2) }}</span>
+              <span>Tax ({{ taxRate }}%):</span>
+              <span>{{ formatPrice(getTax()) }}</span>
             </div>
             <div class="total-row grand-total">
               <span>Total:</span>
-              <span>₹{{ getTotal().toFixed(2) }}</span>
+              <span>{{ formatPrice(getTotal()) }}</span>
             </div>
           </div>
 

@@ -1,0 +1,139 @@
+<div class="settings-container">
+    <div class="page-header">
+        <h1>Settings</h1>
+        <div class="header-actions">
+            <button class="btn-reset" (click)="resetToDefaults()" [disabled]="loading">Reset to Defaults</button>
+            <button class="btn-save" (click)="saveSettings()" [disabled]="loading || saving">
+                {{ saving ? 'Saving...' : 'Save All Settings' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Debug Info -->
+    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
+        <strong>Debug:</strong> Loading: {{ loading }}, Saving: {{ saving }}, Settings Count: {{ getSettingsCount() }}, Error: {{ errorMessage || 'None' }}
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" *ngIf="successMessage">
+        <p>{{ successMessage }}</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+        <p>{{ errorMessage }}</p>
+        <button (click)="loadSettings()">Retry</button>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+        <p>Loading settings...</p>
+    </div>
+
+    <div *ngIf="!loading" class="settings-content">
+        <!-- General Settings -->
+        <div class="settings-group" *ngFor="let groupKey of getGroupKeys()">
+            <h2>{{ getGroupTitle(groupKey) }}</h2>
+            <div class="settings-grid">
+                <div class="setting-item" *ngFor="let key of getGroupSettingKeys(groupKey)">
+                    <label>
+                        <span class="setting-label">{{ formatSettingKey(key) }}</span>
+                        <span class="setting-description" *ngIf="getSettingDescription(key)">{{ getSettingDescription(key) }}</span>
+                    </label>
+                    
+                    <!-- String Input -->
+                    <input 
+                        *ngIf="getSettingType(key) === 'string' && settings[key]"
+                        type="text" 
+                        [(ngModel)]="settings[key].value"
+                        [placeholder]="key"
+                        class="setting-input"
+                    />
+                    
+                    <!-- Number Input -->
+                    <input 
+                        *ngIf="getSettingType(key) === 'number' && settings[key]"
+                        type="number" 
+                        [(ngModel)]="settings[key].value"
+                        [placeholder]="key"
+                        class="setting-input"
+                        step="0.01"
+                    />
+                    
+                    <!-- Boolean Checkbox -->
+                    <div *ngIf="getSettingType(key) === 'boolean' && settings[key]" class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            [id]="'setting-' + key"
+                            [(ngModel)]="settings[key].value"
+                            class="setting-checkbox"
+                        />
+                        <label [for]="'setting-' + key" class="checkbox-label">
+                            {{ settings[key]?.value ? 'Enabled' : 'Disabled' }}
+                        </label>
+                    </div>
+                    
+                    <!-- JSON Input (as textarea) -->
+                    <textarea 
+                        *ngIf="getSettingType(key) === 'json' && settings[key]"
+                        [(ngModel)]="settings[key].value"
+                        [placeholder]="key"
+                        class="setting-textarea"
+                        rows="3"
+                    ></textarea>
+                    
+                    <!-- Fallback if setting doesn't exist -->
+                    <div *ngIf="!settings[key]" class="setting-missing">
+                        Setting not found: {{ key }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Settings (not in groups) -->
+        <div class="settings-group" *ngIf="getAdditionalSettings().length > 0">
+            <h2>Other Settings</h2>
+            <div class="settings-grid">
+                <div class="setting-item" *ngFor="let key of getAdditionalSettings()">
+                    <label>
+                        <span class="setting-label">{{ formatSettingKey(key) }}</span>
+                        <span class="setting-description" *ngIf="getSettingDescription(key)">{{ getSettingDescription(key) }}</span>
+                    </label>
+                    
+                    <input 
+                        *ngIf="getSettingType(key) === 'string' && settings[key]"
+                        type="text" 
+                        [(ngModel)]="settings[key].value"
+                        [placeholder]="key"
+                        class="setting-input"
+                    />
+                    
+                    <input 
+                        *ngIf="getSettingType(key) === 'number' && settings[key]"
+                        type="number" 
+                        [(ngModel)]="settings[key].value"
+                        [placeholder]="key"
+                        class="setting-input"
+                        step="0.01"
+                    />
+                    
+                    <div *ngIf="getSettingType(key) === 'boolean' && settings[key]" class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            [id]="'setting-' + key"
+                            [(ngModel)]="settings[key].value"
+                            class="setting-checkbox"
+                        />
+                        <label [for]="'setting-' + key" class="checkbox-label">
+                            {{ settings[key]?.value ? 'Enabled' : 'Disabled' }}
+                        </label>
+                    </div>
+                    
+                    <div *ngIf="!settings[key]" class="setting-missing">
+                        Setting not found: {{ key }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -24,6 +24,9 @@ import { AdminLayoutComponent } from './admin/admin-layout/admin-layout';
 import { AdminDashboardComponent } from './admin/dashboard/dashboard';
 import { AdminUsersComponent } from './admin/users/users';
 import { AdminOrdersComponent } from './admin/orders/orders';
+import { AdminProductsComponent } from './admin/products/products';
+import { AdminBlogsComponent } from './admin/blogs/blogs';
+import { AdminSettingsComponent } from './admin/settings/settings';
 
 export const routes: Routes = [
   // Home route
@@ -61,7 +64,9 @@ export const routes: Routes = [
       { path: '', component: AdminDashboardComponent, title: 'Admin Dashboard' },
       { path: 'users', component: AdminUsersComponent, title: 'User Management' },
       { path: 'orders', component: AdminOrdersComponent, title: 'Order Management' },
-      // Add more admin routes here as needed
+      { path: 'products', component: AdminProductsComponent, title: 'Product Management' },
+      { path: 'blogs', component: AdminBlogsComponent, title: 'Blog Management' },
+      { path: 'settings', component: AdminSettingsComponent, title: 'Settings' },
     ]
   },
 

@@ -1,0 +1,184 @@
+<div class="products-container">
+    <div class="page-header">
+        <h1>Product Management</h1>
+        <button class="btn-add" (click)="openAddModal()">+ Add Product</button>
+    </div>
+
+    <!-- Debug Info -->
+    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
+        <strong>Debug:</strong> Loading: {{ loading }}, Products Count: {{ products.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
+    </div>
+
+    <div class="filters-bar">
+        <div class="search-box">
+            <input 
+                type="text" 
+                [(ngModel)]="searchTerm" 
+                placeholder="Search products..."
+                (keyup.enter)="search()"
+            />
+            <button (click)="search()">Search</button>
+        </div>
+        <div class="category-filters">
+            <button 
+                [class.active]="categoryFilter === ''" 
+                (click)="filterByCategory('')"
+            >
+                All
+            </button>
+            <button 
+                *ngFor="let cat of categories"
+                [class.active]="categoryFilter === cat" 
+                (click)="filterByCategory(cat)"
+            >
+                {{ cat }}
+            </button>
+        </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+        <p>{{ errorMessage }}</p>
+        <button (click)="loadProducts()">Retry</button>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="loading">
+                    <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+                <ng-container *ngIf="!loading">
+                    <tr *ngIf="!errorMessage && products.length === 0">
+                        <td colspan="6" class="text-center">No products found</td>
+                    </tr>
+                    <tr *ngFor="let product of products; trackBy: trackByProductId">
+                        <td>{{ product?.id }}</td>
+                        <td>{{ product?.name }}</td>
+                        <td>{{ product?.code }}</td>
+                        <td>
+                            <span class="category-badge">{{ product?.category }}</span>
+                        </td>
+                        <td>${{ product?.price }}</td>
+                        <td>
+                            <button class="btn-edit" (click)="editProduct(product)">Edit</button>
+                            <button class="btn-delete" (click)="deleteProduct(product)">Delete</button>
+                        </td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }} (Total: {{ total }})</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" *ngIf="showAddModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Add Product</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="addProduct()">
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" [(ngModel)]="addForm.name" name="name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Code *</label>
+                        <input type="text" [(ngModel)]="addForm.code" name="code" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select [(ngModel)]="addForm.category" name="category" required>
+                            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price *</label>
+                        <input type="number" [(ngModel)]="addForm.price" name="price" required min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Specification</label>
+                        <textarea [(ngModel)]="addForm.specification" name="specification" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="addForm.description" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Images (comma-separated URLs)</label>
+                        <textarea [(ngModel)]="addForm.images" name="images" rows="2" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" (click)="closeModal()">Cancel</button>
+                        <button type="submit" [disabled]="loading">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Edit Product</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="updateProduct()">
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" [(ngModel)]="editForm.name" name="name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Code *</label>
+                        <input type="text" [(ngModel)]="editForm.code" name="code" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select [(ngModel)]="editForm.category" name="category" required>
+                            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price *</label>
+                        <input type="number" [(ngModel)]="editForm.price" name="price" required min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Specification</label>
+                        <textarea [(ngModel)]="editForm.specification" name="specification" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="editForm.description" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Images (comma-separated URLs)</label>
+                        <textarea [(ngModel)]="editForm.images" name="images" rows="2" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" (click)="closeModal()">Cancel</button>
+                        <button type="submit" [disabled]="loading">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { ProductService, ProductDto } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
+import { SettingsService } from '../../services/settings.service';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { generateProductSlug } from '../../utils/slug.util';
@@ -94,10 +95,20 @@ export class ProductComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cartService: CartService,
+    private settingsService: SettingsService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
+    // Load items per page from settings
+    this.settingsService.settings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(settings => {
+        if (Object.keys(settings).length > 0) {
+          this.itemsPerPage = this.settingsService.getItemsPerPage();
+        }
+      });
+
     // Initialize price range with default max if not set
     if (this.filters.priceRange.max === 0) {
       this.filters.priceRange.max = 10000;

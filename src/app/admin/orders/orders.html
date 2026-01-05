@@ -3,6 +3,16 @@
         <h1>Order Management</h1>
     </div>
 
+    <!-- Debug Info -->
+    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
+        <strong>Debug:</strong> Loading: {{ loading }}, Orders Count: {{ orders.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+        <p>{{ errorMessage }}</p>
+        <button (click)="loadOrders()">Retry</button>
+    </div>
+
     <div class="filters-bar">
         <div class="status-filters">
             <button 
@@ -49,32 +59,34 @@
                 <tr *ngIf="loading">
                     <td colspan="7" class="text-center">Loading...</td>
                 </tr>
-                <tr *ngIf="!loading && orders.length === 0">
-                    <td colspan="7" class="text-center">No orders found</td>
-                </tr>
-                <tr *ngFor="let order of orders">
-                    <td>#{{ order._id?.substring(0, 8) }}</td>
-                    <td>{{ order.user_id }}</td>
-                    <td>{{ getProductCount(order) }} item(s)</td>
-                    <td>{{ getOrderTotal(order) }}</td>
-                    <td>
-                        <span class="status-badge" [class]="order.status">
-                            {{ order.status }}
-                        </span>
-                    </td>
-                    <td>{{ formatDate(order.createdAt) }}</td>
-                    <td>
-                        <select 
-                            [value]="order.status" 
-                            (change)="updateStatus(order, $any($event.target).value)"
-                            class="status-select"
-                        >
-                            <option value="pending">Pending</option>
-                            <option value="paid">Paid</option>
-                            <option value="shipped">Shipped</option>
-                        </select>
-                    </td>
-                </tr>
+                <ng-container *ngIf="!loading">
+                    <tr *ngIf="!errorMessage && orders.length === 0">
+                        <td colspan="7" class="text-center">No orders found</td>
+                    </tr>
+                    <tr *ngFor="let order of orders; trackBy: trackByOrderId">
+                        <td>#{{ order?._id?.substring(0, 8) }}</td>
+                        <td>{{ order?.user_id }}</td>
+                        <td>{{ getProductCount(order) }} item(s)</td>
+                        <td>{{ getOrderTotal(order) }}</td>
+                        <td>
+                            <span class="status-badge" [class]="order?.status">
+                                {{ order?.status }}
+                            </span>
+                        </td>
+                        <td>{{ formatDate(order?.createdAt) }}</td>
+                        <td>
+                            <select 
+                                [value]="order?.status" 
+                                (change)="updateStatus(order, $any($event.target).value)"
+                                class="status-select"
+                            >
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="shipped">Shipped</option>
+                            </select>
+                        </td>
+                    </tr>
+                </ng-container>
             </tbody>
         </table>
     </div>

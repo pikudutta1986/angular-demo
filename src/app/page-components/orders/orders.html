@@ -63,16 +63,16 @@
           <div *ngFor="let product of order.products" class="order-product">
             <div class="product-info">
               <h4 class="product-name">{{ product.name }}</h4>
-              <p class="product-details">Quantity: {{ product.quantity }} × ${{ product.price }}</p>
+              <p class="product-details">Quantity: {{ product.quantity }} × {{ formatPrice(product.price) }}</p>
             </div>
-            <div class="product-total">${{ product.total }}</div>
+            <div class="product-total">{{ formatPrice(product.total) }}</div>
           </div>
         </div>
 
         <div class="order-footer">
           <div class="order-total">
             <span class="total-label">Total:</span>
-            <span class="total-amount">${{ order.orderTotal }}</span>
+            <span class="total-amount">{{ formatPrice(order.orderTotal) }}</span>
           </div>
           <button class="btn btn-outline" (click)="viewOrderDetails(order._id)">
             View Details

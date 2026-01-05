@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { OrderService, Order } from '../../services/order.service';
 import { AuthService } from '../../services/auth.service';
+import { SettingsService } from '../../services/settings.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-orders',
@@ -11,18 +13,30 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './orders.html',
   styleUrl: './orders.scss'
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   isLoading = false;
   errorMessage: string | null = null;
+  currencySymbol = '$';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private orderService: OrderService,
     private authService: AuthService,
+    private settingsService: SettingsService,
     private router: Router
   ) {}
 
   ngOnInit() {
+    // Load settings
+    this.settingsService.settings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(settings => {
+        if (Object.keys(settings).length > 0) {
+          this.currencySymbol = this.settingsService.getCurrencySymbol();
+        }
+      });
+
     // Check if user is authenticated
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']);
@@ -30,6 +44,11 @@ export class OrdersComponent implements OnInit {
     }
 
     this.loadOrders();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadOrders() {
@@ -101,6 +120,10 @@ export class OrdersComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  formatPrice(price: number): string {
+    return this.settingsService.formatPrice(price);
   }
 
   viewOrderDetails(orderId: string) {

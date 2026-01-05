@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -7,6 +7,8 @@ import { AuthService, User } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { OrderService } from '../../services/order.service';
 import { PaymentService, RazorpayPaymentResponse } from '../../services/payment.service';
+import { SettingsService } from '../../services/settings.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-checkout',
@@ -15,7 +17,7 @@ import { PaymentService, RazorpayPaymentResponse } from '../../services/payment.
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss'
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
   title = 'Checkout';
   cartItems: CartItem[] = [];
   isLoggedIn = false;
@@ -23,6 +25,12 @@ export class CheckoutComponent implements OnInit {
   checkoutForm: FormGroup;
   isProcessing = false;
   isPaymentProcessing = false;
+  currencySymbol = '$';
+  taxRate = 10;
+  shippingCost = 0;
+  freeShippingThreshold = 100;
+  siteName = 'Ecommerce Store';
+  private destroy$ = new Subject<void>();
 
   constructor(
     private cartService: CartService,
@@ -31,6 +39,7 @@ export class CheckoutComponent implements OnInit {
     private toastService: ToastService,
     private orderService: OrderService,
     private paymentService: PaymentService,
+    private settingsService: SettingsService,
     private fb: FormBuilder
   ) {
     this.checkoutForm = this.fb.group({
@@ -47,6 +56,19 @@ export class CheckoutComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Load settings
+    this.settingsService.settings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(settings => {
+        if (Object.keys(settings).length > 0) {
+          this.currencySymbol = this.settingsService.getCurrencySymbol();
+          this.taxRate = this.settingsService.getTaxRate();
+          this.shippingCost = this.settingsService.getShippingCost();
+          this.freeShippingThreshold = this.settingsService.getFreeShippingThreshold();
+          this.siteName = this.settingsService.getSiteName();
+        }
+      });
+
     // Check authentication
     this.isLoggedIn = this.authService.isAuthenticated();
     this.currentUser = this.authService.getCurrentUser();
@@ -77,16 +99,29 @@ export class CheckoutComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   getSubtotal(): number {
     return this.cartService.getTotalPrice();
   }
 
   getShipping(): number {
-    return this.getSubtotal() > 0 ? 10 : 0; // Flat shipping rate
+    const subtotal = this.getSubtotal();
+    if (subtotal >= this.freeShippingThreshold) {
+      return 0;
+    }
+    return subtotal > 0 ? this.shippingCost : 0;
   }
 
   getTax(): number {
-    return this.getSubtotal() * 0.1; // 10% tax
+    return this.getSubtotal() * (this.taxRate / 100);
+  }
+
+  formatPrice(price: number): string {
+    return this.settingsService.formatPrice(price);
   }
 
   getTotal(): number {
@@ -152,14 +187,28 @@ export class CheckoutComponent implements OnInit {
   }
 
   private openRazorpayCheckout(razorpayOrder: any) {
-    // Get Razorpay key from order response or use fallback
-    const razorpayKey = razorpayOrder.key_id || 'rzp_test_1DP5mmOlF5G5ag'; // Fallback test key
+    // Get Razorpay key from order response, settings, or use fallback
+    const razorpayKey = razorpayOrder.key_id || this.settingsService.getRazorpayKeyId();
+    
+    // Ensure Razorpay script is loaded
+    if (!this.paymentService.isRazorpayLoaded()) {
+      console.log('Waiting for Razorpay script to load...');
+      setTimeout(() => {
+        if (this.paymentService.isRazorpayLoaded()) {
+          this.openRazorpayCheckout(razorpayOrder);
+        } else {
+          this.isPaymentProcessing = false;
+          this.toastService.error('Payment gateway failed to load. Please refresh the page.');
+        }
+      }, 1000);
+      return;
+    }
     
     const options = {
       key: razorpayKey,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency || 'INR',
-      name: 'ShopHub',
+      name: this.siteName,
       description: `Order #${razorpayOrder.receipt || razorpayOrder.id}`,
       order_id: razorpayOrder.id,
       prefill: {
