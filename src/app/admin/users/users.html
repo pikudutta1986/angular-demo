@@ -40,11 +40,6 @@
         <button (click)="loadUsers()">Retry</button>
     </div>
 
-    <!-- Debug Info -->
-    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
-        <strong>Debug:</strong> Loading: {{ loading }}, Users Count: {{ users.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
-    </div>
-
     <div class="table-container">
         <table class="data-table">
             <thead>

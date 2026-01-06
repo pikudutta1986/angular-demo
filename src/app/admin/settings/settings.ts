@@ -70,7 +70,6 @@ export class AdminSettingsComponent implements OnInit {
                 .pipe(
                     timeout(30000),
                     catchError((error) => {
-                        console.error('Request error:', error);
                         this.errorMessage = error.message || 'Request timed out or failed';
                         this.loading = false;
                         return of({ 
@@ -83,19 +82,13 @@ export class AdminSettingsComponent implements OnInit {
                 .subscribe({
                     next: (response: any) => {
                         try {
-                            console.log('=== SETTINGS RESPONSE DEBUG ===');
-                            console.log('Full response:', response);
-                            
                             if (response && response.success && response.data) {
                                 this.settings = response.data;
-                                console.log('Settings loaded:', this.settings);
                             } else {
-                                console.warn('Invalid response structure:', response);
                                 this.settings = {};
                                 this.errorMessage = response.message || 'Failed to load settings';
                             }
                         } catch (parseError: any) {
-                            console.error('Error parsing response:', parseError);
                             this.settings = {};
                             this.errorMessage = 'Error processing response data: ' + (parseError?.message || 'Unknown error');
                         } finally {
@@ -104,14 +97,12 @@ export class AdminSettingsComponent implements OnInit {
                         }
                     },
                     error: (error) => {
-                        console.error('Error loading settings:', error);
                         this.errorMessage = error.error?.message || error.message || 'Failed to load settings';
                         this.loading = false;
                         this.cdr.detectChanges();
                     }
                 });
         } catch (err) {
-            console.error('Error in loadSettings:', err);
             this.errorMessage = 'Failed to load settings';
             this.loading = false;
             this.cdr.detectChanges();
@@ -168,7 +159,6 @@ export class AdminSettingsComponent implements OnInit {
                 this.cdr.detectChanges();
             },
             error: (error) => {
-                console.error('Error saving settings:', error);
                 this.errorMessage = error.error?.message || error.message || 'Failed to save settings';
                 this.saving = false;
                 this.cdr.detectChanges();

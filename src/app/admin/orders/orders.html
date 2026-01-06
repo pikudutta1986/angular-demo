@@ -3,11 +3,6 @@
         <h1>Order Management</h1>
     </div>
 
-    <!-- Debug Info -->
-    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
-        <strong>Debug:</strong> Loading: {{ loading }}, Orders Count: {{ orders.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
-    </div>
-
     <div class="error-message" *ngIf="errorMessage">
         <p>{{ errorMessage }}</p>
         <button (click)="loadOrders()">Retry</button>
@@ -47,7 +42,7 @@
             <thead>
                 <tr>
                     <th>Order ID</th>
-                    <th>User ID</th>
+                    <th>Customer</th>
                     <th>Products</th>
                     <th>Total</th>
                     <th>Status</th>
@@ -64,17 +59,29 @@
                         <td colspan="7" class="text-center">No orders found</td>
                     </tr>
                     <tr *ngFor="let order of orders; trackBy: trackByOrderId">
-                        <td>#{{ order?._id?.substring(0, 8) }}</td>
-                        <td>{{ order?.user_id }}</td>
+                        <td class="order-id">#{{ order?._id?.substring(0, 8) }}</td>
+                        <td class="customer-cell">
+                            <div class="customer-info">
+                                <div class="customer-name">{{ getUserName(order?.user_id) }}</div>
+                                <div class="customer-email">{{ getUserEmail(order?.user_id) }}</div>
+                            </div>
+                        </td>
                         <td>{{ getProductCount(order) }} item(s)</td>
-                        <td>{{ getOrderTotal(order) }}</td>
+                        <td class="order-total">{{ getOrderTotal(order) }}</td>
                         <td>
-                            <span class="status-badge" [class]="order?.status">
+                            <span class="status-badge" [class]="getStatusClass(order?.status)">
                                 {{ order?.status }}
                             </span>
                         </td>
                         <td>{{ formatDate(order?.createdAt) }}</td>
-                        <td>
+                        <td class="actions-cell">
+                            <button class="btn-view" (click)="viewOrderDetails(order)" title="View Details">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                View
+                            </button>
                             <select 
                                 [value]="order?.status" 
                                 (change)="updateStatus(order, $any($event.target).value)"
@@ -95,6 +102,120 @@
         <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
         <span>Page {{ currentPage }} of {{ totalPages }} (Total: {{ total }})</span>
         <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>Order Details</h2>
+            <button class="close-btn" (click)="closeDetailsModal()">×</button>
+        </div>
+        
+        <div class="modal-body" *ngIf="selectedOrder">
+            <!-- Order Info -->
+            <div class="info-section">
+                <h3>Order Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Order ID:</label>
+                        <span>#{{ selectedOrder._id?.substring(0, 8) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status:</label>
+                        <span class="status-badge" [class]="getStatusClass(selectedOrder.status)">
+                            {{ selectedOrder.status }}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Order Total:</label>
+                        <span class="amount">{{ getOrderTotal(selectedOrder) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Created At:</label>
+                        <span>{{ formatDate(selectedOrder.createdAt) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="info-section">
+                <h3>Customer Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Name:</label>
+                        <span>{{ getUserName(selectedOrder.user_id) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Email:</label>
+                        <span>{{ getUserEmail(selectedOrder.user_id) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>User ID:</label>
+                        <span>#{{ selectedOrder.user_id }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="info-section" *ngIf="selectedOrder.shippingAddress">
+                <h3>Shipping Address</h3>
+                <div class="address-card">
+                    <p><strong>{{ selectedOrder.shippingAddress.fullName || 'N/A' }}</strong></p>
+                    <p>{{ selectedOrder.shippingAddress.addressLine1 || 'N/A' }}</p>
+                    <p *ngIf="selectedOrder.shippingAddress.addressLine2">
+                        {{ selectedOrder.shippingAddress.addressLine2 }}
+                    </p>
+                    <p>
+                        {{ selectedOrder.shippingAddress.city || 'N/A' }}, 
+                        {{ selectedOrder.shippingAddress.state || 'N/A' }} 
+                        {{ selectedOrder.shippingAddress.postalCode || 'N/A' }}
+                    </p>
+                    <p>{{ selectedOrder.shippingAddress.country || 'N/A' }}</p>
+                    <p *ngIf="selectedOrder.shippingAddress.phone">
+                        📞 {{ selectedOrder.shippingAddress.phone }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="info-section">
+                <h3>Products ({{ selectedOrder.products?.length || 0 }} items)</h3>
+                <div class="products-list">
+                    <div class="product-item" *ngFor="let product of selectedOrder.products">
+                        <div class="product-info">
+                            <div class="product-name">{{ product.name || 'Product Name N/A' }}</div>
+                            <div class="product-details">
+                                Quantity: {{ product.quantity || 1 }} × ${{ product.price?.toFixed(2) || '0.00' }}
+                            </div>
+                        </div>
+                        <div class="product-total">
+                            ${{ ((product.quantity || 1) * (product.price || 0)).toFixed(2) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="info-section" *ngIf="selectedOrder.razorpay_order_id || selectedOrder.razorpay_payment_id">
+                <h3>Payment Information</h3>
+                <div class="info-grid">
+                    <div class="info-item" *ngIf="selectedOrder.razorpay_order_id">
+                        <label>Razorpay Order ID:</label>
+                        <span class="monospace">{{ selectedOrder.razorpay_order_id }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="selectedOrder.razorpay_payment_id">
+                        <label>Razorpay Payment ID:</label>
+                        <span class="monospace">{{ selectedOrder.razorpay_payment_id }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeDetailsModal()">Close</button>
+        </div>
     </div>
 </div>
 

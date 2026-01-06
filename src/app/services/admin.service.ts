@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface DashboardStats {
@@ -20,7 +21,9 @@ export interface DashboardStats {
   };
   revenue: {
     total: number;
+    byMonth: Array<{ month: string; revenue: number }>;
   };
+  userGrowth: Array<{ day: string; users: number }>;
   blogs: {
     total: number;
   };
@@ -60,6 +63,8 @@ export class AdminService {
   getDashboardStats(): Observable<{ success: boolean; data: DashboardStats; message: string }> {
     return this.http.get<{ success: boolean; data: DashboardStats; message: string }>(
       `${this.baseUrl}/admin/dashboard`
+    ).pipe(
+      timeout(30000) // 30 second timeout
     );
   }
 

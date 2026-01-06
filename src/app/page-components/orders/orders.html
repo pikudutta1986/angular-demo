@@ -81,5 +81,77 @@
       </div>
     </div>
   </div>
+
+  <!-- Order Details Modal -->
+  <div *ngIf="showDetailsModal && selectedOrder" class="modal-overlay" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Order Details</h2>
+        <button class="close-btn" (click)="closeDetailsModal()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Order Info -->
+        <div class="detail-section">
+          <h3>Order Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Order ID:</span>
+              <span class="detail-value">#{{ selectedOrder._id.slice(-8).toUpperCase() }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date:</span>
+              <span class="detail-value">{{ formatDate(selectedOrder.createdAt) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status:</span>
+              <span class="status-badge" [class]="getStatusClass(selectedOrder.status)">
+                {{ getStatusLabel(selectedOrder.status) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total Items:</span>
+              <span class="detail-value">{{ getProductCount(selectedOrder) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="detail-section">
+          <h3>Products</h3>
+          <div class="products-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let product of selectedOrder.products">
+                  <td>{{ product.name }}</td>
+                  <td>{{ formatPrice(product.price) }}</td>
+                  <td>{{ product.quantity }}</td>
+                  <td class="text-bold">{{ formatPrice(product.total) }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="3" class="text-right"><strong>Order Total:</strong></td>
+                  <td class="text-bold total-amount">{{ formatPrice(selectedOrder.orderTotal) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeDetailsModal()">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 

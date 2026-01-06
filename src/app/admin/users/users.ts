@@ -44,7 +44,6 @@ export class AdminUsersComponent implements OnInit {
                 .pipe(
                     timeout(30000), // 30 second timeout
                     catchError((error) => {
-                        console.error('Request error:', error);
                         this.users = [];
                         this.errorMessage = error.message || 'Request timed out or failed';
                         this.loading = false;
@@ -59,18 +58,6 @@ export class AdminUsersComponent implements OnInit {
                 .subscribe({
                     next: (response: any) => {
                         try {
-                            console.log('=== USERS RESPONSE DEBUG ===');
-                            console.log('Full response:', response);
-                            console.log('Response type:', typeof response);
-                            console.log('Is array?', Array.isArray(response));
-                            
-                            if (response) {
-                                console.log('Response keys:', Object.keys(response));
-                                console.log('response.success:', response.success);
-                                console.log('response.data:', response.data);
-                                console.log('response.pagination:', response.pagination);
-                            }
-                            
                             // Direct extraction - backend returns { success: true, data: [], pagination: {} }
                             let usersData: User[] = [];
                             
@@ -78,42 +65,29 @@ export class AdminUsersComponent implements OnInit {
                                 if (Array.isArray(response)) {
                                     // Response is directly an array (unlikely but handle it)
                                     usersData = response;
-                                    console.log('Response is direct array, length:', usersData.length);
                                 } else if (response.data && Array.isArray(response.data)) {
                                     // Standard response structure
                                     usersData = response.data;
-                                    console.log('Extracted from response.data, length:', usersData.length);
                                 } else if (response.data) {
                                     // Data exists but might not be array
-                                    console.warn('response.data exists but is not an array:', typeof response.data, response.data);
                                     usersData = [];
                                 } else {
-                                    console.warn('No data field in response');
                                     usersData = [];
                                 }
                             } else {
-                                console.warn('Response is null or undefined');
                                 usersData = [];
                             }
                             
-                            console.log('=== FINAL PROCESSED DATA ===');
-                            console.log('Users data:', usersData);
-                            console.log('Users count:', usersData.length);
-                            
                             // Assign with new array reference to trigger change detection
                             this.users = usersData.length > 0 ? [...usersData] : [];
-                            
-                            console.log('Component users assigned, length:', this.users.length);
                             
                             // Handle pagination
                             if (response && response.pagination) {
                                 this.totalPages = response.pagination.totalPages || 1;
                                 this.total = response.pagination.total || 0;
-                                console.log('Pagination - totalPages:', this.totalPages, 'total:', this.total);
                             } else {
                                 this.totalPages = 1;
                                 this.total = usersData.length;
-                                console.log('No pagination, using data length:', this.total);
                             }
                             
                             this.errorMessage = null;
@@ -121,35 +95,23 @@ export class AdminUsersComponent implements OnInit {
                             // Force change detection
                             setTimeout(() => {
                                 this.cdr.detectChanges();
-                                console.log('Change detection triggered, users length:', this.users.length);
                             }, 0);
                             
                         } catch (parseError: any) {
-                            console.error('Error parsing response:', parseError);
-                            console.error('Parse error details:', parseError?.message, parseError?.stack);
                             this.users = [];
                             this.errorMessage = 'Error processing response data: ' + (parseError?.message || 'Unknown error');
                         } finally {
                             this.loading = false;
                             this.cdr.detectChanges();
-                            console.log('Loading set to false, final users length:', this.users.length);
                         }
                     },
                     error: (error) => {
-                        console.error('Error loading users:', error);
-                        console.error('Error details:', {
-                            status: error.status,
-                            statusText: error.statusText,
-                            message: error.message,
-                            error: error.error
-                        });
                         this.users = [];
                         this.errorMessage = error.error?.message || error.message || 'Failed to load users. Please check your connection and try again.';
                         this.loading = false;
                     }
                 });
         } catch (err) {
-            console.error('Error in loadUsers:', err);
             this.users = [];
             this.errorMessage = 'Failed to load users';
             this.loading = false;
@@ -201,7 +163,6 @@ export class AdminUsersComponent implements OnInit {
                 this.loading = false;
             },
             error: (error) => {
-                console.error('Error updating user:', error);
                 this.loading = false;
             }
         });
@@ -221,7 +182,6 @@ export class AdminUsersComponent implements OnInit {
                 this.loading = false;
             },
             error: (error) => {
-                console.error('Error deleting user:', error);
                 this.loading = false;
             }
         });

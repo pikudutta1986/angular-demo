@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType, Chart } from 'chart.js';
@@ -20,26 +20,56 @@ export class AdminDashboardComponent implements OnInit {
     stats: any[] = [];
     dashboardData: DashboardStats | null = null;
 
-    constructor(private adminService: AdminService) {}
+    constructor(
+        private adminService: AdminService,
+        private cdr: ChangeDetectorRef
+    ) {}
 
     ngOnInit() {
         this.loadDashboardData();
     }
 
     loadDashboardData() {
+        console.log('🔄 Loading dashboard data...');
         this.loading = true;
+        
         this.adminService.getDashboardStats().subscribe({
             next: (response) => {
-                if (response.success && response.data) {
-                    this.dashboardData = response.data;
-                    this.updateStats();
-                    this.updateCharts();
+                try {
+                    console.log('✅ Dashboard API Response:', response);
+                    
+                    if (response && response.success && response.data) {
+                        this.dashboardData = response.data;
+                        console.log('📊 Dashboard Data:', this.dashboardData);
+                        console.log('📦 Recent Orders:', this.dashboardData.recentOrders);
+                        console.log('📦 Recent Orders Length:', this.dashboardData.recentOrders?.length);
+                        
+                        this.updateStats();
+                        this.updateCharts();
+                    } else {
+                        console.error('❌ Invalid API response:', response);
+                        alert('Dashboard API returned invalid response');
+                    }
+                } catch (err: any) {
+                    console.error('❌ Error processing dashboard data:', err);
+                    alert('Error processing dashboard data: ' + err.message);
+                } finally {
+                    this.loading = false;
+                    console.log('✅ Loading complete. Loading state:', this.loading);
+                    console.log('📦 Final recent orders count:', this.getRecentOrders().length);
+                    
+                    // Force change detection
+                    setTimeout(() => {
+                        this.cdr.detectChanges();
+                        console.log('🔄 Change detection triggered');
+                    }, 0);
                 }
-                this.loading = false;
             },
             error: (error) => {
-                console.error('Error loading dashboard:', error);
+                console.error('❌ Dashboard API Error:', error);
                 this.loading = false;
+                const errorMsg = error.error?.message || error.message || 'Unknown error';
+                alert('Failed to load dashboard data: ' + errorMsg);
             }
         });
     }
@@ -146,12 +176,60 @@ export class AdminDashboardComponent implements OnInit {
     recentOrders: any[] = [];
 
     updateCharts() {
-        // Update charts with real data if needed
-        // For now, keeping the static chart data
+        if (!this.dashboardData) return;
+        
+        // Update revenue chart with real data
+        if (this.dashboardData.revenue.byMonth && this.dashboardData.revenue.byMonth.length > 0) {
+            this.revenueChartData = {
+                labels: this.dashboardData.revenue.byMonth.map(item => item.month),
+                datasets: [
+                    {
+                        data: this.dashboardData.revenue.byMonth.map(item => item.revenue),
+                        backgroundColor: '#667eea',
+                        borderRadius: 4,
+                        hoverBackgroundColor: '#5a67d8'
+                    }
+                ]
+            };
+        }
+        
+        // Update user growth chart with real data
+        if (this.dashboardData.userGrowth && this.dashboardData.userGrowth.length > 0) {
+            this.userChartData = {
+                labels: this.dashboardData.userGrowth.map(item => item.day),
+                datasets: [
+                    {
+                        data: this.dashboardData.userGrowth.map(item => item.users),
+                        borderColor: '#48bb78',
+                        backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }
+                ]
+            };
+        }
     }
 
     getRecentOrders() {
-        return this.dashboardData?.recentOrders || [];
+        // Return empty array if dashboardData is null or recentOrders is not an array
+        if (!this.dashboardData) {
+            console.log('⚠️ Dashboard data is null');
+            return [];
+        }
+        
+        if (!this.dashboardData.recentOrders) {
+            console.log('⚠️ Recent orders is null/undefined');
+            return [];
+        }
+        
+        if (!Array.isArray(this.dashboardData.recentOrders)) {
+            console.log('⚠️ Recent orders is not an array:', typeof this.dashboardData.recentOrders);
+            return [];
+        }
+        
+        console.log('✅ Returning recent orders:', this.dashboardData.recentOrders.length, 'orders');
+        return this.dashboardData.recentOrders;
     }
 
     formatDate(date: string): string {
@@ -171,5 +249,9 @@ export class AdminDashboardComponent implements OnInit {
 
     getOrderTotal(order: any): string {
         return `$${order.orderTotal?.toFixed(2) || '0.00'}`;
+    }
+
+    trackByOrderId(index: number, order: any): any {
+        return order?._id || index;
     }
 }
