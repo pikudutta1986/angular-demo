@@ -1,0 +1,181 @@
+<div class="blogs-container">
+    <div class="page-header">
+        <h1>Blog Management</h1>
+        <button class="btn-add" (click)="openAddModal()">+ Add Blog</button>
+    </div>
+
+    <!-- Debug Info -->
+    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
+        <strong>Debug:</strong> Loading: {{ loading }}, Blogs Count: {{ blogs.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
+    </div>
+
+    <div class="filters-bar">
+        <div class="search-box">
+            <input 
+                type="text" 
+                [(ngModel)]="searchTerm" 
+                placeholder="Search blogs..."
+                (keyup.enter)="search()"
+            />
+            <button (click)="search()">Search</button>
+        </div>
+        <div class="category-filters">
+            <button 
+                [class.active]="categoryFilter === ''" 
+                (click)="filterByCategory('')"
+            >
+                All
+            </button>
+            <button 
+                *ngFor="let cat of categories"
+                [class.active]="categoryFilter === cat" 
+                (click)="filterByCategory(cat)"
+            >
+                {{ cat }}
+            </button>
+        </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+        <p>{{ errorMessage }}</p>
+        <button (click)="loadBlogs()">Retry</button>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Slug</th>
+                    <th>Tags</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="loading">
+                    <td colspan="6" class="text-center">Loading...</td>
+                </tr>
+                <ng-container *ngIf="!loading">
+                    <tr *ngIf="!errorMessage && blogs.length === 0">
+                        <td colspan="6" class="text-center">No blogs found</td>
+                    </tr>
+                    <tr *ngFor="let blog of blogs; trackBy: trackByBlogId">
+                        <td>{{ blog?.title }}</td>
+                        <td>
+                            <span class="category-badge">{{ blog?.category }}</span>
+                        </td>
+                        <td>{{ blog?.slug }}</td>
+                        <td>
+                            <span *ngFor="let tag of blog?.tags" class="tag-badge">{{ tag }}</span>
+                        </td>
+                        <td>{{ blog?.createdAt ? (blog.createdAt | date:'short') : 'N/A' }}</td>
+                        <td>
+                            <button class="btn-edit" (click)="editBlog(blog)">Edit</button>
+                            <button class="btn-delete" (click)="deleteBlog(blog)">Delete</button>
+                        </td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }} (Total: {{ total }})</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" *ngIf="showAddModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Add Blog</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="addBlog()">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" [(ngModel)]="addForm.title" name="title" required (input)="onTitleChange()" />
+                    </div>
+                    <div class="form-group">
+                        <label>Slug</label>
+                        <input type="text" [(ngModel)]="addForm.slug" name="slug" />
+                        <small>Auto-generated from title if left empty</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select [(ngModel)]="addForm.category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Content *</label>
+                        <textarea [(ngModel)]="addForm.content" name="content" rows="8" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="url" [(ngModel)]="addForm.image_url" name="image_url" />
+                    </div>
+                    <div class="form-group">
+                        <label>Tags (comma-separated)</label>
+                        <input type="text" [(ngModel)]="addForm.tags" name="tags" placeholder="tag1, tag2, tag3" />
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" (click)="closeModal()">Cancel</button>
+                        <button type="submit" [disabled]="loading">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" *ngIf="showEditModal" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Edit Blog</h2>
+                <button class="close-btn" (click)="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="updateBlog()">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" [(ngModel)]="editForm.title" name="title" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Slug</label>
+                        <input type="text" [(ngModel)]="editForm.slug" name="slug" />
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select [(ngModel)]="editForm.category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Content *</label>
+                        <textarea [(ngModel)]="editForm.content" name="content" rows="8" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="url" [(ngModel)]="editForm.image_url" name="image_url" />
+                    </div>
+                    <div class="form-group">
+                        <label>Tags (comma-separated)</label>
+                        <input type="text" [(ngModel)]="editForm.tags" name="tags" placeholder="tag1, tag2, tag3" />
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" (click)="closeModal()">Cancel</button>
+                        <button type="submit" [disabled]="loading">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -40,6 +40,11 @@
         <button (click)="loadUsers()">Retry</button>
     </div>
 
+    <!-- Debug Info -->
+    <div class="debug-info" style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.75rem;">
+        <strong>Debug:</strong> Loading: {{ loading }}, Users Count: {{ users.length }}, Total: {{ total }}, Error: {{ errorMessage || 'None' }}
+    </div>
+
     <div class="table-container">
         <table class="data-table">
             <thead>
@@ -56,24 +61,26 @@
                 <tr *ngIf="loading">
                     <td colspan="6" class="text-center">Loading...</td>
                 </tr>
-                <tr *ngIf="!loading && !errorMessage && users.length === 0">
-                    <td colspan="6" class="text-center">No users found</td>
-                </tr>
-                <tr *ngFor="let user of users">
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>
-                        <span class="role-badge" [class]="user.role.toLowerCase()">
-                            {{ user.role }}
-                        </span>
-                    </td>
-                    <td>{{ user.created_at | date:'short' }}</td>
-                    <td>
-                        <button class="btn-edit" (click)="editUser(user)">Edit</button>
-                        <button class="btn-delete" (click)="deleteUser(user)">Delete</button>
-                    </td>
-                </tr>
+                <ng-container *ngIf="!loading">
+                    <tr *ngIf="!errorMessage && users.length === 0">
+                        <td colspan="6" class="text-center">No users found</td>
+                    </tr>
+                    <tr *ngFor="let user of users; trackBy: trackByUserId">
+                        <td>{{ user?.id }}</td>
+                        <td>{{ user?.name }}</td>
+                        <td>{{ user?.email }}</td>
+                        <td>
+                            <span class="role-badge" [class]="user?.role?.toLowerCase()">
+                                {{ user?.role }}
+                            </span>
+                        </td>
+                        <td>{{ user?.created_at ? (user.created_at | date:'short') : 'N/A' }}</td>
+                        <td>
+                            <button class="btn-edit" (click)="editUser(user)">Edit</button>
+                            <button class="btn-delete" (click)="deleteUser(user)">Delete</button>
+                        </td>
+                    </tr>
+                </ng-container>
             </tbody>
         </table>
     </div>

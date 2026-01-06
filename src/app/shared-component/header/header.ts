@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
+import { SettingsService } from '../../services/settings.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -37,10 +38,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private cartService: CartService,
-    private router: Router
+    private router: Router,
+    private settingsService: SettingsService
   ) { }
 
   ngOnInit() {
+    // Load site name from settings
+    this.settingsService.settings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(settings => {
+        if (Object.keys(settings).length > 0) {
+          this.title = this.settingsService.getSiteName();
+        }
+      });
+
     // Subscribe to auth state
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))

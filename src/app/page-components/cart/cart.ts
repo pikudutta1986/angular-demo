@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../services/cart.service';
+import { SettingsService } from '../../services/settings.service';
 import { Subject, takeUntil } from 'rxjs';
 import { generateProductSlug } from '../../utils/slug.util';
 
@@ -21,7 +22,10 @@ export class CartComponent implements OnInit, OnDestroy {
   isLoading = false;
   private destroy$ = new Subject<void>();
 
-  constructor(private cartService: CartService) {}
+  constructor(
+    private cartService: CartService,
+    private settingsService: SettingsService
+  ) {}
 
   ngOnInit() {
     // Subscribe to cart items changes
@@ -76,7 +80,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   formatPrice(price: number): string {
-    return `$${price.toFixed(2)}`;
+    return this.settingsService.formatPrice(price);
   }
 
   isEmpty(): boolean {

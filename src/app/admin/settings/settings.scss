@@ -1,0 +1,216 @@
+.settings-container {
+    padding: 2rem;
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+
+            .btn-save {
+                padding: 0.75rem 1.5rem;
+                background: #48bb78;
+                color: white;
+                border: none;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                font-weight: 500;
+
+                &:hover:not(:disabled) {
+                    background: #38a169;
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .btn-reset {
+                padding: 0.75rem 1.5rem;
+                background: #ed8936;
+                color: white;
+                border: none;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                font-weight: 500;
+
+                &:hover:not(:disabled) {
+                    background: #dd6b20;
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+
+    .success-message {
+        padding: 1rem;
+        background: #c6f6d5;
+        color: #22543d;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        padding: 1rem;
+        background: #fed7d7;
+        color: #c53030;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        button {
+            padding: 0.5rem 1rem;
+            background: #c53030;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 3rem;
+        color: #718096;
+    }
+
+    .settings-content {
+        .settings-group {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+            h2 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #2d3748;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 2px solid #e2e8f0;
+            }
+
+            .settings-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1.5rem;
+
+                .setting-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+
+                    label {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.25rem;
+
+                        .setting-label {
+                            font-weight: 500;
+                            color: #4a5568;
+                            font-size: 0.875rem;
+                        }
+
+                        .setting-description {
+                            font-size: 0.75rem;
+                            color: #718096;
+                            font-style: italic;
+                        }
+                    }
+
+                    .setting-input,
+                    .setting-textarea {
+                        padding: 0.75rem;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 0.25rem;
+                        font-size: 0.875rem;
+                        font-family: inherit;
+
+                        &:focus {
+                            outline: none;
+                            border-color: #667eea;
+                            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                        }
+                    }
+
+                    .setting-textarea {
+                        resize: vertical;
+                        min-height: 80px;
+                    }
+
+                    .checkbox-wrapper {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        padding: 0.5rem 0;
+
+                        .setting-checkbox {
+                            width: 20px;
+                            height: 20px;
+                            cursor: pointer;
+                        }
+
+                        .checkbox-label {
+                            font-size: 0.875rem;
+                            color: #4a5568;
+                            cursor: pointer;
+                            user-select: none;
+                        }
+                    }
+
+                    .setting-missing {
+                        padding: 0.5rem;
+                        background: #fed7d7;
+                        color: #c53030;
+                        border-radius: 0.25rem;
+                        font-size: 0.75rem;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem;
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+
+                button {
+                    width: 100%;
+                }
+            }
+        }
+
+        .settings-content .settings-group .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+

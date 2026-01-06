@@ -23,6 +23,12 @@ export interface ProductApiResponse {
   page?: number;
   pageSize?: number;
   totalPages?: number;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -78,6 +84,51 @@ export class ProductService {
   getProductBySlug(slug: string): Observable<{ success: boolean; data: ProductDto; message?: string; error?: string }> {
     return this.http.get<{ success: boolean; data: ProductDto; message?: string; error?: string }>(
       `${this.baseUrl}/product/slug/${slug}`
+    );
+  }
+
+  /**
+   * Create a new product (Admin only)
+   */
+  createProduct(productData: {
+    name: string;
+    code: string;
+    category: string;
+    price: number;
+    specification: string;
+    description: string;
+    images: string;
+  }): Observable<{ success: boolean; data: any; message?: string; error?: string }> {
+    return this.http.post<{ success: boolean; data: any; message?: string; error?: string }>(
+      `${this.baseUrl}/product`,
+      productData
+    );
+  }
+
+  /**
+   * Update a product (Admin only)
+   */
+  updateProduct(id: number, productData: {
+    name?: string;
+    code?: string;
+    category?: string;
+    price?: number;
+    specification?: string;
+    description?: string;
+    images?: string;
+  }): Observable<{ success: boolean; data: any; message?: string; error?: string }> {
+    return this.http.put<{ success: boolean; data: any; message?: string; error?: string }>(
+      `${this.baseUrl}/product/${id}`,
+      productData
+    );
+  }
+
+  /**
+   * Delete a product (Admin only)
+   */
+  deleteProduct(id: number): Observable<{ success: boolean; message?: string; error?: string }> {
+    return this.http.delete<{ success: boolean; message?: string; error?: string }>(
+      `${this.baseUrl}/product/${id}`
     );
   }
 }
