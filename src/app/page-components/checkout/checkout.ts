@@ -278,9 +278,54 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     // Convert cart items to order products
     const orderProducts = this.cartService.toOrderProducts();
 
-    // Create order
+    // Prepare customer info and shipping address from form
+    const formValue = this.checkoutForm.value;
+    
+    const customerInfo = {
+      fullName: formValue.fullName,
+      email: formValue.email,
+      phone: formValue.phone
+    };
+
+    const shippingAddress = {
+      fullName: formValue.fullName,
+      addressLine1: formValue.address,
+      addressLine2: '',
+      city: formValue.city,
+      state: formValue.state,
+      postalCode: formValue.zipCode,
+      country: formValue.country,
+      phone: formValue.phone
+    };
+
+    const paymentInfo = {
+      paymentMethod: 'razorpay',
+      razorpay_order_id: paymentResponse.razorpay_order_id,
+      razorpay_payment_id: paymentResponse.razorpay_payment_id,
+      razorpay_signature: paymentResponse.razorpay_signature
+    };
+
+    // Prepare financial breakdown
+    const subtotal = this.getSubtotal();
+    const taxAmount = this.getTax();
+    const shippingCost = this.getShipping();
+    const orderTotal = this.getTotal();
+
+    const financialData = {
+      subtotal: subtotal,
+      taxRate: this.taxRate,
+      taxAmount: taxAmount,
+      shippingCost: shippingCost,
+      orderTotal: orderTotal
+    };
+
+    // Create order with all information including financial breakdown
     this.orderService.createOrder({
-      products: orderProducts
+      products: orderProducts,
+      customerInfo: customerInfo,
+      shippingAddress: shippingAddress,
+      paymentInfo: paymentInfo,
+      financialData: financialData
     }).subscribe({
       next: (orderResponse) => {
         if (orderResponse.success) {

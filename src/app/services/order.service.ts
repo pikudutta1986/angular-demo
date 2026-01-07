@@ -12,23 +12,69 @@ export interface OrderProduct {
   total: number;
 }
 
+export interface CustomerInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
+export interface ShippingAddress {
+  fullName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
+}
+
+export interface PaymentInfo {
+  paymentMethod?: string;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
+  razorpay_signature?: string;
+}
+
 export interface Order {
   _id: string;
   user_id: number;
   products: OrderProduct[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  shippingCost: number;
   orderTotal: number;
-  status: 'pending' | 'paid' | 'shipped';
+  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  customerInfo?: CustomerInfo;
+  shippingAddress?: ShippingAddress;
+  paymentMethod?: string;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
+  razorpay_signature?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
+export interface FinancialData {
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  shippingCost: number;
+  orderTotal: number;
+}
+
 export interface CreateOrderRequest {
   products: OrderProduct[];
+  customerInfo?: CustomerInfo;
+  shippingAddress?: ShippingAddress;
+  paymentInfo?: PaymentInfo;
+  financialData?: FinancialData;
 }
 
 export interface UpdateOrderRequest {
   products?: OrderProduct[];
-  status?: 'pending' | 'paid' | 'shipped';
+  status?: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 }
 
 export interface OrderApiResponse {

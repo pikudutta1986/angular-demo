@@ -30,43 +30,30 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     loadDashboardData() {
-        console.log('🔄 Loading dashboard data...');
         this.loading = true;
         
         this.adminService.getDashboardStats().subscribe({
             next: (response) => {
                 try {
-                    console.log('✅ Dashboard API Response:', response);
-                    
                     if (response && response.success && response.data) {
                         this.dashboardData = response.data;
-                        console.log('📊 Dashboard Data:', this.dashboardData);
-                        console.log('📦 Recent Orders:', this.dashboardData.recentOrders);
-                        console.log('📦 Recent Orders Length:', this.dashboardData.recentOrders?.length);
-                        
                         this.updateStats();
                         this.updateCharts();
                     } else {
-                        console.error('❌ Invalid API response:', response);
                         alert('Dashboard API returned invalid response');
                     }
                 } catch (err: any) {
-                    console.error('❌ Error processing dashboard data:', err);
                     alert('Error processing dashboard data: ' + err.message);
                 } finally {
                     this.loading = false;
-                    console.log('✅ Loading complete. Loading state:', this.loading);
-                    console.log('📦 Final recent orders count:', this.getRecentOrders().length);
                     
                     // Force change detection
                     setTimeout(() => {
                         this.cdr.detectChanges();
-                        console.log('🔄 Change detection triggered');
                     }, 0);
                 }
             },
             error: (error) => {
-                console.error('❌ Dashboard API Error:', error);
                 this.loading = false;
                 const errorMsg = error.error?.message || error.message || 'Unknown error';
                 alert('Failed to load dashboard data: ' + errorMsg);
@@ -214,21 +201,17 @@ export class AdminDashboardComponent implements OnInit {
     getRecentOrders() {
         // Return empty array if dashboardData is null or recentOrders is not an array
         if (!this.dashboardData) {
-            console.log('⚠️ Dashboard data is null');
             return [];
         }
         
         if (!this.dashboardData.recentOrders) {
-            console.log('⚠️ Recent orders is null/undefined');
             return [];
         }
         
         if (!Array.isArray(this.dashboardData.recentOrders)) {
-            console.log('⚠️ Recent orders is not an array:', typeof this.dashboardData.recentOrders);
             return [];
         }
         
-        console.log('✅ Returning recent orders:', this.dashboardData.recentOrders.length, 'orders');
         return this.dashboardData.recentOrders;
     }
 

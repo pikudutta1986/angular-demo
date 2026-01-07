@@ -143,13 +143,18 @@
             <div class="info-section">
                 <h3>Customer Information</h3>
                 <div class="info-grid">
+                    <!-- Show customer info from order if available, otherwise from user lookup -->
                     <div class="info-item">
                         <label>Name:</label>
-                        <span>{{ getUserName(selectedOrder.user_id) }}</span>
+                        <span>{{ selectedOrder.customerInfo?.fullName || getUserName(selectedOrder.user_id) }}</span>
                     </div>
                     <div class="info-item">
                         <label>Email:</label>
-                        <span>{{ getUserEmail(selectedOrder.user_id) }}</span>
+                        <span>{{ selectedOrder.customerInfo?.email || getUserEmail(selectedOrder.user_id) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Phone:</label>
+                        <span>{{ selectedOrder.customerInfo?.phone || 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <label>User ID:</label>
@@ -178,6 +183,15 @@
                     </p>
                 </div>
             </div>
+            
+            <!-- No Shipping Address Message -->
+            <div class="info-section" *ngIf="!selectedOrder.shippingAddress">
+                <h3>Shipping Address</h3>
+                <div class="address-card no-data">
+                    <p>⚠️ No shipping address recorded for this order</p>
+                    <p class="hint">This order was placed before customer address collection was implemented.</p>
+                </div>
+            </div>
 
             <!-- Products -->
             <div class="info-section">
@@ -187,12 +201,37 @@
                         <div class="product-info">
                             <div class="product-name">{{ product.name || 'Product Name N/A' }}</div>
                             <div class="product-details">
-                                Quantity: {{ product.quantity || 1 }} × ${{ product.price?.toFixed(2) || '0.00' }}
+                                Quantity: {{ product.quantity || 1 }} × {{ formatPrice(product.price) }}
                             </div>
                         </div>
                         <div class="product-total">
-                            ${{ ((product.quantity || 1) * (product.price || 0)).toFixed(2) }}
+                            {{ formatPrice((product.quantity || 1) * (product.price || 0)) }}
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Breakdown -->
+            <div class="info-section">
+                <h3>Financial Details</h3>
+                <div class="financial-breakdown">
+                    <div class="financial-row">
+                        <span class="financial-label">Subtotal:</span>
+                        <span class="financial-value">{{ formatPrice(selectedOrder.subtotal || selectedOrder.orderTotal) }}</span>
+                    </div>
+                    <div class="financial-row" *ngIf="selectedOrder.taxRate !== undefined && selectedOrder.taxRate > 0">
+                        <span class="financial-label">Tax ({{ selectedOrder.taxRate }}%):</span>
+                        <span class="financial-value">{{ formatPrice(selectedOrder.taxAmount || 0) }}</span>
+                    </div>
+                    <div class="financial-row">
+                        <span class="financial-label">Shipping:</span>
+                        <span class="financial-value">
+                            {{ selectedOrder.shippingCost === 0 ? 'Free' : formatPrice(selectedOrder.shippingCost || 0) }}
+                        </span>
+                    </div>
+                    <div class="financial-row total-row">
+                        <span class="financial-label"><strong>Total Amount Paid:</strong></span>
+                        <span class="financial-value total-amount"><strong>{{ formatPrice(selectedOrder.orderTotal) }}</strong></span>
                     </div>
                 </div>
             </div>
