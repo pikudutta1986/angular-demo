@@ -18,6 +18,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage: string | null = null;
   currencySymbol = '$';
+  selectedOrder: Order | null = null;
+  showDetailsModal = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -127,8 +129,20 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   viewOrderDetails(orderId: string) {
-    // Navigate to order details if needed, or show modal
-    console.log('View order details:', orderId);
+    const order = this.orders.find(o => o._id === orderId);
+    if (order) {
+      this.selectedOrder = order;
+      this.showDetailsModal = true;
+    }
+  }
+
+  closeDetailsModal() {
+    this.showDetailsModal = false;
+    this.selectedOrder = null;
+  }
+
+  getProductCount(order: Order): number {
+    return order.products.reduce((sum, p) => sum + p.quantity, 0);
   }
 }
 

@@ -100,13 +100,25 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Loading State -->
                     <tr *ngIf="loading">
-                        <td colspan="6" class="text-center">Loading...</td>
+                        <td colspan="6" class="text-center" style="padding: 2rem;">
+                            <div style="font-size: 1rem;">Loading...</div>
+                        </td>
                     </tr>
+                    
+                    <!-- Empty State -->
                     <tr *ngIf="!loading && getRecentOrders().length === 0">
-                        <td colspan="6" class="text-center">No recent orders</td>
+                        <td colspan="6" class="text-center" style="padding: 2rem; color: #718096; background: #f7fafc;">
+                            <div style="font-size: 1.1rem; font-weight: 500;">📦 No order found</div>
+                            <div style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                Run <code>node create-test-orders.js</code> to create test orders
+                            </div>
+                        </td>
                     </tr>
-                    <tr *ngFor="let order of getRecentOrders()">
+                    
+                    <!-- Orders Data -->
+                    <tr *ngFor="let order of getRecentOrders(); trackBy: trackByOrderId">
                         <td class="order-id">#{{ order._id?.substring(0, 8) || 'N/A' }}</td>
                         <td class="customer">
                             <div class="avatar-circle">U</div>

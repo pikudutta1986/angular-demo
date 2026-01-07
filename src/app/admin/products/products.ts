@@ -59,7 +59,6 @@ export class AdminProductsComponent implements OnInit {
             .pipe(
                 timeout(30000), // 30 second timeout
                 catchError((error) => {
-                    console.error('Request error:', error);
                     this.products = [];
                     this.errorMessage = error.message || 'Request timed out or failed';
                     this.loading = false;
@@ -74,18 +73,6 @@ export class AdminProductsComponent implements OnInit {
             .subscribe({
                 next: (response: any) => {
                     try {
-                        console.log('=== PRODUCTS RESPONSE DEBUG ===');
-                        console.log('Full response:', response);
-                        console.log('Response type:', typeof response);
-                        console.log('Is array?', Array.isArray(response));
-                        
-                        if (response) {
-                            console.log('Response keys:', Object.keys(response));
-                            console.log('response.success:', response.success);
-                            console.log('response.data:', response.data);
-                            console.log('response.pagination:', response.pagination);
-                        }
-                        
                         // Direct extraction - backend returns { success: true, data: [], pagination: {} }
                         let productsData: ProductDto[] = [];
                         
@@ -93,47 +80,33 @@ export class AdminProductsComponent implements OnInit {
                             if (Array.isArray(response)) {
                                 // Response is directly an array (unlikely but handle it)
                                 productsData = response;
-                                console.log('Response is direct array, length:', productsData.length);
                             } else if (response.data && Array.isArray(response.data)) {
                                 // Standard response structure
                                 productsData = response.data;
-                                console.log('Extracted from response.data, length:', productsData.length);
                             } else if (response.data) {
                                 // Data exists but might not be array
-                                console.warn('response.data exists but is not an array:', typeof response.data, response.data);
                                 productsData = [];
                             } else {
-                                console.warn('No data field in response');
                                 productsData = [];
                             }
                         } else {
-                            console.warn('Response is null or undefined');
                             productsData = [];
                         }
                         
-                        console.log('=== FINAL PROCESSED DATA ===');
-                        console.log('Products data:', productsData);
-                        console.log('Products count:', productsData.length);
-                        
                         // Assign with new array reference to trigger change detection
                         this.products = productsData.length > 0 ? [...productsData] : [];
-                        
-                        console.log('Component products assigned, length:', this.products.length);
                         
                         // Handle pagination
                         if (response && response.pagination) {
                             this.totalPages = response.pagination.totalPages || 1;
                             this.total = response.pagination.total || 0;
-                            console.log('Pagination - totalPages:', this.totalPages, 'total:', this.total);
                         } else if (response && response.totalPages) {
                             // Fallback to flat pagination fields
                             this.totalPages = response.totalPages || 1;
                             this.total = response.total || productsData.length;
-                            console.log('Using flat pagination fields - totalPages:', this.totalPages, 'total:', this.total);
                         } else {
                             this.totalPages = 1;
                             this.total = productsData.length;
-                            console.log('No pagination, using data length:', this.total);
                         }
                         
                         this.errorMessage = null;
@@ -141,28 +114,17 @@ export class AdminProductsComponent implements OnInit {
                         // Force change detection
                         setTimeout(() => {
                             this.cdr.detectChanges();
-                            console.log('Change detection triggered, products length:', this.products.length);
                         }, 0);
                         
                     } catch (parseError: any) {
-                        console.error('Error parsing response:', parseError);
-                        console.error('Parse error details:', parseError?.message, parseError?.stack);
                         this.products = [];
                         this.errorMessage = 'Error processing response data: ' + (parseError?.message || 'Unknown error');
                     } finally {
                         this.loading = false;
                         this.cdr.detectChanges();
-                        console.log('Loading set to false, final products length:', this.products.length);
                     }
                 },
                 error: (error) => {
-                    console.error('Error loading products:', error);
-                    console.error('Error details:', {
-                        status: error.status,
-                        statusText: error.statusText,
-                        message: error.message,
-                        error: error.error
-                    });
                     this.products = [];
                     this.errorMessage = error.error?.message || error.message || 'Failed to load products. Please check your connection and try again.';
                     this.loading = false;
@@ -170,7 +132,6 @@ export class AdminProductsComponent implements OnInit {
                 }
             });
         } catch (err) {
-            console.error('Error in loadProducts:', err);
             this.products = [];
             this.errorMessage = 'Failed to load products';
             this.loading = false;
@@ -220,7 +181,6 @@ export class AdminProductsComponent implements OnInit {
                 this.loading = false;
             },
             error: (error) => {
-                console.error('Error creating product:', error);
                 alert(error.error?.message || 'Failed to create product');
                 this.loading = false;
             }
@@ -256,7 +216,6 @@ export class AdminProductsComponent implements OnInit {
                 this.loading = false;
             },
             error: (error) => {
-                console.error('Error updating product:', error);
                 alert(error.error?.message || 'Failed to update product');
                 this.loading = false;
             }
@@ -279,7 +238,6 @@ export class AdminProductsComponent implements OnInit {
                 this.loading = false;
             },
             error: (error) => {
-                console.error('Error deleting product:', error);
                 alert(error.error?.message || 'Failed to delete product');
                 this.loading = false;
             }
